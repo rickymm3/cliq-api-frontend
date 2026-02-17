@@ -1,0 +1,7 @@
+# Logs
+cliq_forum_frontend/log/
+cliq_forum_rebuild/log/
+
+# Temp/cache
+cliq_forum_frontend/tmp/
+cliq_forum_rebuild/tmp/
