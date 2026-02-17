@@ -1,0 +1,57 @@
+.container.py-4
+  %h1.h4.mb-4 #{@cliq.name} — Moderation Transparency
+  %p.text-muted
+    Rank: #{@cliq.rank_name.titleize} · Seats: #{@rank_settings.fetch("seats", 0)} · Support capacity per user: #{@rank_settings.fetch("support_capacity", 0)}
+
+  %section.mb-4
+    %h2.h6.mb-2 Moderation tools
+    .d-flex.flex-wrap.gap-2
+      - if current_user&.moderator_roles&.active&.where(cliq: @cliq)&.exists?
+        = link_to "Open moderation queue",
+                  moderation_queue_path(@cliq),
+                  class: "btn btn-outline-primary btn-sm",
+                  data: { turbo_frame: "_top", turbo_action: "advance" }
+      = link_to "View moderator candidates",
+                cliq_path(@cliq, show_moderation_candidates: true),
+                class: "btn btn-outline-secondary btn-sm",
+                data: { turbo_frame: "_top", turbo_action: "advance" }
+
+  %section.mb-4
+    %h2.h5 Active moderators
+    - if @active_moderators.any?
+      %ul.list-unstyled
+        - @active_moderators.each do |role|
+          %li.mb-2
+            %strong= role.user.profile&.username || role.user.email
+            %small.text-muted
+              started #{role.started_at.to_date.to_s(:long)} · supports at seating #{role.seated_supports_count}
+    - else
+      %p.text-muted No active moderators.
+
+  %section.mb-4
+    %h2.h5 Last 30 days moderation activity
+    - if @action_counts.present?
+      %table.table.table-sm
+        %thead
+          %tr
+            %th Action
+            %th.text-end Count
+        %tbody
+          - @action_counts.each do |action, count|
+            %tr
+              %td= action.to_s.humanize
+              %td.text-end= count
+    - else
+      %p.text-muted No moderation actions recorded in this window.
+
+  %section.mb-4
+    %h2.h5 Reports received
+    %p
+      Reports in window:
+      %strong= @recent_reports
+
+  %section
+    %h2.h5 Become a moderator
+    %p
+      Moderator candidates are posted as regular posts tagged as "Moderator candidacy" within the cliq.
+      Use the “View moderator candidates” button above to view and support them.

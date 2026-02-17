@@ -1,0 +1,16 @@
+.follow-toggle__btn {
+  min-width: 7.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-weight: 500;
+}
+
+.follow-toggle__btn.btn-outline-secondary {
+  background-color: #f8fafc;
+}
+
+.follow-toggle__btn .bi {
+  font-size: 1rem;
+}

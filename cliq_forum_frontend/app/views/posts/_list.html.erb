@@ -1,0 +1,15 @@
+<%= turbo_frame_tag "posts_page_#{pagination['current_page']}" do %>
+  <%= render partial: "posts/post", collection: posts, as: :post %>
+  
+  <% if pagination['next_page'] %>
+    <%= turbo_frame_tag "posts_page_#{pagination['next_page']}", 
+        src: url_for(params.permit(:sort, :exclude_children, :q).merge(page: pagination['next_page'])), 
+        loading: :lazy do %>
+        <div class="d-flex justify-content-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+    <% end %>
+  <% end %>
+<% end %>

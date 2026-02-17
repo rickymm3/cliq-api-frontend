@@ -1,0 +1,79 @@
+<div class="container-fluid mt-5 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-9">
+      <!-- Header Section -->
+      <div class="mb-5">
+        <nav class="breadcrumb mb-3">
+          <%= link_to "Cliqs", root_path, class: "breadcrumb-item" %>
+          <%= link_to @cliq["name"], cliq_path(@cliq["id"]), class: "breadcrumb-item" %>
+          <span class="breadcrumb-item active">Create Post</span>
+        </nav>
+        
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <div>
+            <h1 class="h3 mb-1">Create a New Post</h1>
+            <p class="text-muted mb-0">Share your thoughts in <strong><%= @cliq["name"] %></strong></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Card -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4 p-lg-5">
+          <% if @errors.present? %>
+            <div class="alert alert-danger alert-dismissible fade show d-flex gap-3 mb-4" role="alert">
+              <div class="flex-grow-1">
+                <strong>⚠️ Error creating post</strong>
+                <ul class="mb-0 mt-2">
+                  <% @errors.each do |error| %>
+                    <li><%= error %></li>
+                  <% end %>
+                </ul>
+              </div>
+              <button type="button" class="btn-close flex-shrink-0" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% end %>
+
+          <%= render "form" %>
+        </div>
+      </div>
+
+      <!-- Info Box -->
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <div class="card bg-light border-0 text-center">
+            <div class="card-body">
+              <div class="fs-3 mb-2">✨</div>
+              <p class="card-text small text-muted">Use rich formatting to make your post stand out</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="card bg-light border-0 text-center">
+            <div class="card-body">
+              <div class="fs-3 mb-2">🔒</div>
+              <p class="card-text small text-muted">Your post visibility follows community rules</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .breadcrumb {
+    background-color: transparent;
+    padding: 0.5rem 0;
+  }
+
+  .card {
+    transition: box-shadow 0.3s ease;
+  }
+
+  .post-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+</style>

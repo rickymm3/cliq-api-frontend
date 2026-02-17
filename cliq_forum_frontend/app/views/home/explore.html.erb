@@ -1,0 +1,94 @@
+<div class="container mt-3">
+  
+  <!-- Search Bar -->
+  <div class="px-3 py-3 mb-3 bg-white border-bottom rounded-top">
+    <form action="<%= search_path %>" method="get" class="w-100">
+      <div class="input-group">
+        <%= text_field_tag :q, "", placeholder: "Search cliqs...", class: "form-control", id: "explore-search" %>
+        <button class="btn btn-primary" type="submit">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <!-- Coming Soon Banner -->
+      <div class="alert alert-info border-0 rounded-lg shadow-sm" role="alert">
+        <h4 class="alert-heading d-flex align-items-center gap-2 mb-3">
+          <span style="font-size: 2rem;">🚀</span>
+          Coming Soon
+        </h4>
+        <p class="mb-0">
+          We're building an amazing way for you to discover new Cliqs tailored to your interests!
+        </p>
+      </div>
+
+      <!-- What's Coming -->
+      <div class="card border-0 shadow-sm mt-5">
+        <div class="card-body">
+          <h5 class="card-title fw-bold mb-4">
+            <i class="bi bi-sparkles"></i> Explore All Cliqs (Coming Soon)
+          </h5>
+
+          <p class="text-muted mb-4">
+            This page will provide a curated browsing experience to help you discover new communities and topics.
+          </p>
+
+          <h6 class="fw-bold text-dark mb-3">Planned Features:</h6>
+          <ul class="list-unstyled">
+            <li class="mb-3 d-flex gap-3">
+              <span class="badge bg-primary rounded-pill mt-1">1</span>
+              <div>
+                <strong>Full Grid/List View</strong>
+                <p class="text-muted small mb-0">Browse all available main Cliqs with descriptions and post counts</p>
+              </div>
+            </li>
+
+            <li class="mb-3 d-flex gap-3">
+              <span class="badge bg-primary rounded-pill mt-1">2</span>
+              <div>
+                <strong>Hierarchical Organization</strong>
+                <p class="text-muted small mb-0">View parent Cliqs with their child categories nested underneath</p>
+              </div>
+            </li>
+
+            <li class="mb-3 d-flex gap-3">
+              <span class="badge bg-primary rounded-pill mt-1">3</span>
+              <div>
+                <strong>Personalized Recommendations</strong>
+                <p class="text-muted small mb-0">Get Cliq suggestions based on your interests and subscription history</p>
+              </div>
+            </li>
+
+            <li class="mb-3 d-flex gap-3">
+              <span class="badge bg-primary rounded-pill mt-1">4</span>
+              <div>
+                <strong>Smart Curation</strong>
+                <p class="text-muted small mb-0">Trending categories, most active communities, and featured Cliqs</p>
+              </div>
+            </li>
+
+            <li class="d-flex gap-3">
+              <span class="badge bg-primary rounded-pill mt-1">5</span>
+              <div>
+                <strong>Advanced Discovery</strong>
+                <p class="text-muted small mb-0">Search and filter by category, activity level, size, and relevance to your interests</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Alternative Action -->
+      <div class="mt-5 p-4 bg-light rounded-lg text-center">
+        <p class="text-muted mb-3">For now, you can:</p>
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+          <%= link_to "🏠 Return Home", root_path, class: "btn btn-primary" %>
+          <%= link_to "📰 View Your Feed", feed_path, class: "btn btn-outline-primary" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

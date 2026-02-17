@@ -1,0 +1,20 @@
+#pager.min-w-full.my-8.flex.justify-center
+  - if pagy.next
+    - if local_assigns[:url]
+      = link_to "Load more posts",
+        url,
+        class: "",
+        data: { turbo_stream: " ", controller: "autoclick", "autoclick-has-next-page": "true" }
+    - elsif local_assigns[:cliq] && cliq
+      = link_to "Load more posts",
+        cliq_path(cliq, page: pagy.next),
+        class: "",
+        data: { turbo_stream: " ", controller: "autoclick", "autoclick-has-next-page": "true" }
+    - else
+      = link_to "Load more posts",
+        url_for(params.permit!.to_h.merge(page: pagy.next)),
+        class: "",
+        data: { turbo_stream: " ", controller: "autoclick", "autoclick-has-next-page": "true" }
+  - else
+    .no-more-posts.text-center.py-4
+      No more posts to load.

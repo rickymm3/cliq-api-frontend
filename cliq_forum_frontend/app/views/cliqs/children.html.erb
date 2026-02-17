@@ -1,0 +1,86 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-lg-12">
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><%= link_to "Home", root_path %></li>
+          <li class="breadcrumb-item"><%= link_to @cliq["name"], cliq_path(@cliq["id"]) %></li>
+          <li class="breadcrumb-item active" aria-current="page">All Subcategories</li>
+        </ol>
+      </nav>
+
+      <!-- Header -->
+      <div class="mb-4">
+        <h1 class="display-5 mb-2">Subcategories of <%= @cliq["name"] %></h1>
+        <p class="text-muted">Browse all <%= @pagination["total_count"] %> subcategories</p>
+      </div>
+
+      <!-- Children Grid -->
+      <% if @children.any? %>
+        <div class="row g-3 mb-4">
+          <% @children.each do |child| %>
+            <div class="col-md-6 col-lg-4">
+              <%= link_to cliq_path(child["id"]), class: "card border-0 shadow-sm text-decoration-none text-dark h-100 hover-shadow", style: "transition: all 0.3s ease;" do %>
+                <div class="card-body">
+                  <h5 class="card-title mb-2"><%= child["name"] %></h5>
+                  <p class="card-text text-muted small mb-3"><%= truncate(child["description"], length: 100) %></p>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                      <span class="badge bg-secondary"><%= child["posts_count"] || 0 %> posts</span>
+                    </small>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Pagination -->
+        <% if @pagination["total_pages"] && @pagination["total_pages"] > 1 %>
+          <nav aria-label="Page navigation" class="mb-4">
+            <ul class="pagination justify-content-center">
+              <% if @pagination["page"] > 1 %>
+                <li class="page-item">
+                  <%= link_to "← Previous", cliq_children_path(@cliq["id"], page: @pagination["page"] - 1), class: "page-link" %>
+                </li>
+              <% end %>
+
+              <% (1..@pagination["total_pages"]).each do |page_num| %>
+                <li class="page-item <%= 'active' if page_num == @pagination["page"] %>">
+                  <% if page_num == @pagination["page"] %>
+                    <span class="page-link"><%= page_num %></span>
+                  <% else %>
+                    <%= link_to page_num, cliq_children_path(@cliq["id"], page: page_num), class: "page-link" %>
+                  <% end %>
+                </li>
+              <% end %>
+
+              <% if @pagination["page"] < @pagination["total_pages"] %>
+                <li class="page-item">
+                  <%= link_to "Next →", cliq_children_path(@cliq["id"], page: @pagination["page"] + 1), class: "page-link" %>
+                </li>
+              <% end %>
+            </ul>
+          </nav>
+        <% end %>
+      <% else %>
+        <div class="alert alert-info" role="alert">
+          No subcategories yet.
+        </div>
+      <% end %>
+
+      <!-- Back Button -->
+      <div class="mb-4">
+        <%= link_to "← Back to #{@cliq["name"]}", cliq_path(@cliq["id"]), class: "btn btn-outline-secondary" %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-2px);
+  }
+</style>

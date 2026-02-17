@@ -1,0 +1,17 @@
+.card.rounded-2xl.shadow-sm.border.border-slate-200
+  .card-body
+    %h2.h6.mb-2 How heat works
+    %p.text-muted.small.mb-3 Activity on a post raises an internal heat score. Once it crosses the threshold, the post is marked hot for 24 hours.
+
+    %ul.list-unstyled.small.mb-3
+      %li.d-flex.align-items-center.gap-2
+        %i.bi.bi-eye-fill.text-muted
+        %span Views give the score a light bump.
+      %li.d-flex.align-items-center.gap-2
+        %i.bi.bi-hand-index-thumb-fill.text-muted
+        %span Clicks add a little more momentum.
+      %li.d-flex.align-items-center.gap-2
+        %i.bi.bi-chat-dots-fill.text-muted
+        %span Replies give the biggest boost.
+
+    %p.text-muted.small.mb-0 The score automatically decays over time, so only recent momentum keeps a post in the hot feed.

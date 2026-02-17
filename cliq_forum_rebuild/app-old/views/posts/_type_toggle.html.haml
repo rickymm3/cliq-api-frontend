@@ -1,0 +1,25 @@
+-# app/views/posts/_type_toggle.html.haml
+-# Locals: post_type:, cliq:
+-# Frame-targeted links (HTML). No turbo_stream, no JS, no hover prefetch surprises.
+
+- t = (post_type.to_s.presence || "discussion")
+- btn = ->(active) { "btn btn-sm me-2 #{active ? 'btn-secondary active' : 'btn-outline-secondary'}" }
+
+%div
+  - base_params = {}
+  - base_params[:cliq_id] = cliq.id if defined?(cliq) && cliq
+
+  = link_to "🗨️ Post",
+            new_post_path(base_params.merge(post_type: :discussion)),
+            class: btn.(t == "discussion"),
+            data: { turbo_frame: "post_new_block" }
+
+  = link_to "📰 Article",
+            new_post_path(base_params.merge(post_type: :article)),
+            class: btn.(t == "article"),
+            data: { turbo_frame: "post_new_block" }
+
+  = link_to "❓ Question",
+            new_post_path(base_params.merge(post_type: :question)),
+            class: btn.(t == "question"),
+            data: { turbo_frame: "post_new_block" }

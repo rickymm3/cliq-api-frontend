@@ -1,0 +1,144 @@
+<div class="container">
+  <div class="sticky-top bg-white border-bottom shadow-sm px-3 py-2 mb-3 d-flex align-items-center justify-content-between" style="top: 0; z-index: 1020;">
+    <div class="d-flex align-items-center flex-grow-1 overflow-hidden">
+      <h1 class="h4 mb-0 text-truncate fw-bold">My Dashboard</h1>
+    </div>
+    <div class="d-flex align-items-center">
+      <%= link_to user_profile_path(current_user[:id]), class: "btn btn-outline-primary btn-sm ms-2" do %>
+        View Profile
+      <% end %>
+      <%= button_to logout_path, method: :delete, class: "btn btn-outline-danger btn-sm ms-2", form: { class: "d-inline" } do %>
+        <i class="bi bi-box-arrow-right"></i>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="mb-4">
+        <p class="text-muted mb-0">Manage your posts, subscriptions, and follows</p>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts-content" type="button" role="tab">
+            📝 My Posts <span class="badge bg-secondary ms-2"><%= @posts.count %></span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="replies-tab" data-bs-toggle="tab" data-bs-target="#replies-content" type="button" role="tab">
+            💬 My Replies <span class="badge bg-secondary ms-2">0</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="subscriptions-tab" data-bs-toggle="tab" data-bs-target="#subscriptions-content" type="button" role="tab">
+            📚 Subscribed Cliqs <span class="badge bg-secondary ms-2"><%= @subscriptions.count %></span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="following-tab" data-bs-toggle="tab" data-bs-target="#following-content" type="button" role="tab">
+            👥 Following <span class="badge bg-secondary ms-2">0</span>
+          </button>
+        </li>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        <!-- My Posts Tab -->
+        <div class="tab-pane fade show active" id="posts-content" role="tabpanel">
+          <% if @posts.any? %>
+            <div class="row g-3">
+              <% @posts.each do |post| %>
+                <div class="col-12">
+                  <div class="card border-0 shadow-sm" style="transition: all 0.3s ease; cursor: pointer;" onclick="window.location='<%= cliq_post_path(post["cliq"]["id"], post["id"]) %>'">
+                    <div class="card-body">
+                      <!-- Post Type Badge and Title -->
+                      <div class="mb-2">
+                        <% if post["post_type"] == "article" %>
+                          <span class="badge bg-info me-2">📄 Article</span>
+                        <% elsif post["post_type"] == "question" %>
+                          <span class="badge bg-warning me-2">❓ Question</span>
+                        <% else %>
+                          <span class="badge bg-secondary me-2">💬 Discussion</span>
+                        <% end %>
+                      </div>
+
+                      <!-- Post Title -->
+                      <h5 class="card-title mb-2 fw-bold text-dark">
+                        <%= post["title"] %>
+                      </h5>
+
+                      <!-- Post Metadata -->
+                      <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                          in <strong><%= link_to post["cliq"]["name"], cliq_path(post["cliq"]["id"]), class: "text-decoration-none text-primary" %></strong>
+                        </small>
+                        <small class="text-muted">
+                          <%= time_ago_in_words(Time.parse(post["created_at"])) %> ago
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="alert alert-info" role="alert">
+              <p class="mb-0">You haven't created any posts yet. <%= link_to "Start a conversation!", root_path %></p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- My Replies Tab -->
+        <div class="tab-pane fade" id="replies-content" role="tabpanel">
+          <div class="alert alert-info" role="alert">
+            <p class="mb-0">Reply functionality coming soon!</p>
+          </div>
+        </div>
+
+        <!-- Subscribed Cliqs Tab -->
+        <div class="tab-pane fade" id="subscriptions-content" role="tabpanel">
+          <% if @subscriptions.any? %>
+            <div class="row g-3">
+              <% @subscriptions.each do |cliq| %>
+                <div class="col-md-6 col-lg-4">
+                  <%= link_to cliq_path(cliq["id"]), class: "card border-0 shadow-sm text-decoration-none text-dark h-100", style: "transition: all 0.3s ease;" do %>
+                    <div class="card-body">
+                      <h5 class="card-title mb-2 fw-bold"><%= cliq["name"] %></h5>
+                      <p class="card-text text-muted small mb-3">
+                        <%= truncate(cliq["description"], length: 100) %>
+                      </p>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <small class="badge bg-secondary">
+                          <%= cliq["posts_count"] || 0 %> posts
+                        </small>
+                        <small class="text-muted">✓ Subscribed</small>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="alert alert-info" role="alert">
+              <p class="mb-0">You're not subscribed to any Cliqs yet. <%= link_to "Browse and subscribe!", root_path %></p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Following Tab -->
+        <div class="tab-pane fade" id="following-content" role="tabpanel">
+          <div class="alert alert-info" role="alert">
+            <p class="mb-0">Following functionality coming soon!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back Button -->
+      <div class="mt-5">
+        <%= link_to "← Back to Home", root_path, class: "btn btn-outline-secondary" %>
+      </div>
+    </div>
+  </div>
+</div>

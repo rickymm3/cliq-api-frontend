@@ -1,0 +1,71 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start API Server",
+			"type": "shell",
+			"command": "cd /Users/richardmason/Documents/code/copilotcliq/cliq_forum_rebuild && rm -f tmp/pids/server.pid && rails server -p 3000",
+			"isBackground": true
+		},
+		{
+			"label": "Start Frontend Server",
+			"type": "shell",
+			"command": "cd /Users/richardmason/Documents/code/copilotcliq/cliq_forum_frontend && rm -f tmp/pids/server.pid && rails server -p 3001",
+			"isBackground": true
+		},
+		{
+			"label": "Start API Server (Reload)",
+			"type": "shell",
+			"command": "cd /Users/richardmason/Documents/code/copilotcliq/cliq_forum_rebuild && rm -f tmp/pids/server.pid && rails server -p 3000",
+			"isBackground": true
+		},
+		{
+			"label": "Start API Server (ActionText)",
+			"type": "shell",
+			"command": "cd /Users/richardmason/Documents/code/copilotcliq/cliq_forum_rebuild && rm -f tmp/pids/server.pid && rails server -p 3000",
+			"isBackground": true
+		},
+		{
+			"label": "Start API (Final)",
+			"type": "shell",
+			"command": "cd /Users/richardmason/Documents/code/copilotcliq/cliq_forum_rebuild && rm -f tmp/pids/server.pid && rails server -p 3000",
+			"isBackground": true
+		},
+		{
+			"label": "Start API Server Final",
+			"type": "shell",
+			"command": "cd /Users/richardmason/Documents/code/copilotcliq/cliq_forum_rebuild && rm -f tmp/pids/server.pid && rails server -p 3000",
+			"isBackground": true
+		},
+		{
+			"label": "Start Frontend with Trix CSS",
+			"type": "shell",
+			"command": "cd /Users/richardmason/Documents/code/copilotcliq/cliq_forum_frontend && rm -f tmp/pids/server.pid && rails server -p 3001",
+			"isBackground": true
+		},
+		{
+			"label": "Start API Server",
+			"type": "shell",
+			"command": "cd /Users/richardmason/Documents/code/copilotcliq/cliq_forum_rebuild && rm -f tmp/pids/server.pid && rails server -p 3000",
+			"isBackground": true
+		},
+		{
+			"label": "Start Frontend - Fixed Controllers",
+			"type": "shell",
+			"command": "cd /Users/richardmason/Documents/code/copilotcliq/cliq_forum_frontend && rails server -p 3001",
+			"isBackground": true
+		},
+		{
+			"label": "Frontend with rich_text_area",
+			"type": "shell",
+			"command": "cd /Users/richardmason/Documents/code/copilotcliq/cliq_forum_frontend && rm -f tmp/pids/server.pid && rails server -p 3001",
+			"isBackground": true
+		},
+		{
+			"label": "Frontend with Manual Trix",
+			"type": "shell",
+			"command": "cd /Users/richardmason/Documents/code/copilotcliq/cliq_forum_frontend && rm -f tmp/pids/server.pid && rails server -p 3001",
+			"isBackground": true
+		}
+	]
+}

@@ -1,0 +1,16 @@
+- items = primary_sidebar_items
+%nav.sidebar-nav.mb-4
+  %ul.sidebar-nav__list
+    - items.each do |item|
+      - classes = ["sidebar-nav__link"]
+      - classes << "is-active" if item[:active]
+      %li.sidebar-nav__item
+        = link_to item[:path],
+                  class: classes.join(" "),
+                  data: { turbo_frame: "_top", turbo_action: "advance" } do
+          %span.sidebar-nav__icon-wrap
+            %i{ class: "bi bi-#{item[:icon]} sidebar-nav__icon", aria: { hidden: true } }
+          %span.sidebar-nav__label
+            = item[:label]
+            - if item[:badge_count].to_i.positive?
+              %span.sidebar-nav__badge= item[:badge_count]

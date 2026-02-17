@@ -1,0 +1,158 @@
+-# app/views/posts/_post.html.haml
+- show_new_badge = local_assigns.key?(:show_new_badge) ? show_new_badge : false
+- full_view      = local_assigns.fetch(:full_view, false)
+- card_classes   = ["post-card", "card", "shadow-sm", "border-0", "mb-4"]
+- card_classes << (full_view ? "post-card--full" : "post-card--preview")
+- if show_new_badge
+  - card_classes << "post-card--highlight"
+  - card_classes << "new-replies"
+- title_path = post_id_slug_post_path(post_id: post.id, slug: post.slug)
+- owner_viewing = defined?(current_user) && current_user.present? && current_user == post.user
+- display_name = post.user&.profile&.username || post.user&.email || "User"
+- avatar_initial = display_name.to_s.first&.upcase || "U"
+- post_type_label = post.respond_to?(:post_type) && post.post_type.present? ? post.post_type.titleize : nil
+
+= turbo_frame_tag dom_id(post) do
+  %div{ class: card_classes.join(" ") }
+    .card-body.post-card__header
+      - preview_image = (!full_view ? post.primary_display_image : nil)
+      - has_preview = preview_image&.attached?
+      .post-card__row.post-card__row--cliq
+        .text-muted.small
+          = render "posts/post_info/path_header", post: post
+        - if post.hot?
+          %span.badge.text-bg-danger.post-badge Hot
+        - elsif post_type_label
+          %span.badge.text-bg-light.post-badge= post_type_label
+      .post-card__row.post-card__row--meta
+        .post-card__meta-left.d-flex.align-items-center.gap-2.min-w-0
+          .avatar-circle.avatar-circle--sm{ title: display_name }
+            = avatar_initial
+          .post-card__meta-text.text-muted.small
+            = render partial: "posts/post_info/author", locals: { post: post }
+        .post-card__actions.dropdown
+          %button.btn.btn-light.btn-sm{ data: { bs_toggle: "dropdown" }, aria: { expanded: "false", label: "Post options" } }
+            %i.bi.bi-three-dots
+          %ul.dropdown-menu.dropdown-menu-end
+            %li
+              = link_to "Open post",
+                        title_path,
+                        class: "dropdown-item",
+                        data: { turbo_frame: "_top", turbo_action: "advance" }
+            %li
+              = link_to "Report", "#", class: "dropdown-item"
+      .post-card__row.post-card__row--title
+        %h2.h5.mb-0.text-break.post-card__title
+          = link_to post.title,
+                    title_path,
+                    class: "text-decoration-none text-dark",
+                    data: { turbo_frame: "_top", turbo_action: "advance" }
+
+    - if post.deleted?
+      .card-body.border-top
+        .alert.alert-warning.mb-0= t("posts.deleted_message")
+    - else
+      .card-body.border-top
+        - body_classes = ["post-body"]
+        - body_classes << "rich-text" if full_view
+        .post-card__content{ class: (has_preview ? "post-card__content--with-media" : nil) }
+          - if has_preview
+            .post-card__thumbnail
+              - thumb_source = safe_variant(preview_image, resize_to_fill: [120, 120])
+              = image_tag thumb_source,
+                          alt: "#{post.title} thumbnail",
+                          class: "post-card__thumbnail-image",
+                          loading: "lazy"
+          .post-card__content-main
+            - if full_view && post.article? && post.article_header_image.attached?
+              - header_source = safe_variant(post.article_header_image, resize_to_fit: [1200, 720])
+              .post-article__header-image.mb-4
+                = button_tag type: "button",
+                              class: "post-image-lightbox",
+                              data: { controller: "image-lightbox",
+                                      action: "click->image-lightbox#open",
+                                      image_lightbox_url_value: url_for(post.article_header_image) } do
+                  = image_tag header_source,
+                              alt: "#{post.title} header image",
+                              class: "img-fluid rounded post-article__header-image-img"
+            %div{ class: body_classes.join(" ") }
+              - if full_view
+                - if !post.article? && post.lead_image.attached?
+                  - lead_preview = safe_variant(post.lead_image, resize_to_fit: [960, 720])
+                  .post-body__lead.mb-4
+                    = button_tag type: "button",
+                                  class: "post-image-lightbox",
+                                  data: { controller: "image-lightbox",
+                                          action: "click->image-lightbox#open",
+                                          image_lightbox_url_value: url_for(post.lead_image) } do
+                      = image_tag lead_preview,
+                                  alt: "#{post.title} image",
+                                  class: "img-fluid rounded shadow-sm"
+                - if post.article? && post.article_inline_image_one.attached?
+                  = render "posts/article_inline_image",
+                           image: post.article_inline_image_one,
+                           position: 1,
+                           post: post
+                = post.content
+                - if post.article? && post.article_inline_image_two.attached?
+                  = render "posts/article_inline_image",
+                           image: post.article_inline_image_two,
+                           position: 2,
+                           post: post
+              - else
+                %p.post-summary.mb-0= truncate(post.content&.to_plain_text.to_s, length: 280, separator: " ")
+    - if post.visibility_moderation?
+      = turbo_stream_from Moderation::Broadcaster.support_stream_name(post.cliq)
+      .card-body.border-top.bg-light
+        .d-flex.align-items-center.justify-content-between.flex-wrap.gap-3
+          .d-flex.flex-column
+            %strong Moderator candidacy
+            %small.text-muted Support this user to help seat them as a moderator for #{post.cliq.name}.
+          = render "moderation/support_button",
+                   post: post,
+                   supporter: defined?(current_user) ? current_user : nil
+    - if full_view
+      .card-footer.bg-transparent.border-0.pt-0
+        .d-flex.align-items-center.justify-content-between.flex-wrap.gap-3
+          = link_to "Reply",
+                    new_post_reply_path(post),
+                    class: "btn btn-primary btn-sm",
+                    data: { turbo_frame: "new_reply" }
+
+          .d-flex.align-items-center.gap-3.flex-wrap
+            .post-stats.d-flex.align-items-center.gap-3.text-muted.small
+              .d-flex.align-items-center.gap-2
+                %i.bi.bi-chat-left-text
+                = pluralize(post.replies_count, "reply")
+              .d-flex.align-items-center.gap-2
+                %i.bi.bi-clock-history
+                = "#{time_ago_in_words(post.updated_at)} ago"
+
+            - if owner_viewing
+              .dropdown
+                %button.btn.btn-outline-secondary.btn-sm{ data: { bs_toggle: "dropdown" }, aria: { expanded: "false" } }
+                  %i.bi.bi-three-dots-vertical
+                %ul.dropdown-menu.dropdown-menu-end
+                  %li
+                    = link_to "Edit",
+                              edit_post_path(post.id),
+                              class: "dropdown-item",
+                              data: { turbo_frame: "_top", turbo_action: "advance" }
+                  %li
+                    = button_to "Delete",
+                                soft_delete_post_path(post.id),
+                                method: :patch,
+                                class: "dropdown-item text-danger",
+                                form: { data: { turbo_confirm: "Delete this post?", turbo_frame: "_top", turbo_action: "advance" } }
+    - else
+      .card-footer.bg-transparent.border-0.pt-0
+        .d-flex.align-items-center.justify-content-between.flex-wrap.gap-3
+          .post-heat.d-flex.align-items-center.gap-2.text-muted.small
+            %i.bi.bi-activity
+            = "Heat #{number_with_precision(post.heat_score.to_f, precision: 1, strip_insignificant_zeros: true)}"
+
+          .post-reactions.d-flex.align-items-center.gap-2
+            = button_tag type: "button", class: "btn btn-light btn-sm post-reaction" do
+              %i.bi.bi-hand-thumbs-up
+            = button_tag type: "button", class: "btn btn-light btn-sm post-reaction" do
+              %i.bi.bi-hand-thumbs-down

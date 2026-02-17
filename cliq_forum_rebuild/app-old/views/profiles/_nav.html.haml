@@ -1,0 +1,19 @@
+-# locals: profile:, current_section:, owner:
+%nav.profile-nav.mb-4
+  %ul.profile-nav__list.d-flex.gap-2.flex-wrap.list-unstyled.mb-0
+    - sections = []
+    - sections << { key: :overview,  label: "Overview",  path: profile_path(profile) }
+    - sections << { key: :posts,     label: "Posts",     path: posts_profile_path(profile) }
+    - sections << { key: :articles,  label: "Articles",  path: articles_profile_path(profile) }
+    - sections << { key: :replies,   label: "Replies",   path: replies_profile_path(profile) }
+    - if owner
+      - sections << { key: :subscriptions, label: "Subscriptions", path: subscriptions_profile_path(profile) }
+      - sections << { key: :following, label: "Following", path: followed_users_path }
+
+    - sections.each do |section|
+      - active = (section[:key].to_s == current_section.to_s)
+      %li{ class: "profile-nav__item#{active ? ' active' : ''}" }
+        = link_to section[:label],
+                  section[:path],
+                  class: "btn btn-sm #{active ? 'btn-primary' : 'btn-outline-secondary'}",
+                  data: { turbo_frame: "profile_content", turbo_action: "advance" }

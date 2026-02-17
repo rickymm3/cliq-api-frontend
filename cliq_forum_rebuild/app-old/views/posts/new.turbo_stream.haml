@@ -1,0 +1,4 @@
+-# app/views/posts/new.turbo_stream.haml
+
+= turbo_stream.replace "post_new_block" do
+  = render "posts/new_block", post: (@post || Post.new), cliq: @cliq

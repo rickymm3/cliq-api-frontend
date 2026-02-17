@@ -1,0 +1,109 @@
+<div class="container mt-5" data-controller="post-interaction">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <% if @user %>
+        <div class="card border-0 shadow">
+          <div class="card-body p-5 text-center">
+            <div class="mb-4">
+              <div class="avatar-circle bg-primary text-white mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px;">
+                👤
+              </div>
+            </div>
+
+            <h2 class="card-title mb-1"><%= @user["email"] %></h2>
+            
+            <div class="text-muted small mb-4">
+              <p class="mb-1">Member since <strong><%= Date.parse(@user["created_at"]).strftime("%B %Y") %></strong></p>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="row text-center">
+              <div class="col-4">
+                <div class="mb-3">
+                  <h4 class="mb-1"><strong><%= @user["posts_count"] || 0 %></strong></h4>
+                  <small class="text-muted">Posts</small>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="mb-3">
+                  <%= link_to user_followers_path(@user["id"]), class: "text-decoration-none text-dark" do %>
+                    <h4 class="mb-1"><strong id="profile-followers-count"><%= @user["followers_count"] || 0 %></strong></h4>
+                    <small class="text-muted">Followers</small>
+                  <% end %>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="mb-3">
+                  <%= link_to user_following_path(@user["id"]), class: "text-decoration-none text-dark" do %>
+                    <h4 class="mb-1"><strong><%= @user["following_count"] || 0 %></strong></h4>
+                    <small class="text-muted">Following</small>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-grid gap-2">
+              <%= render partial: "users/follow_button", locals: { user: @user, extra_classes: "mb-2" } %>
+              <%= link_to "← Back", root_path, class: "btn btn-outline-primary" %>
+            </div>
+          </div>
+        </div>
+
+        <% if @user["recent_signals"] && @user["recent_signals"].any? %>
+           <div class="mt-4 mb-3 d-flex align-items-center">
+              <h5 class="fw-bold mb-0 text-success">
+                <i class="bi bi-pin-angle-fill me-2"></i>Recent Signals
+              </h5>
+           </div>
+           
+           <div class="mb-4">
+             <%= render partial: "posts/post", collection: @user["recent_signals"], as: :post %>
+           </div>
+        <% end %>
+
+        <% if @user["posts_count"] && @user["posts_count"] > 0 %>
+          <div class="card border-0 shadow mt-4">
+            <div class="card-header bg-white border-bottom">
+              <h5 class="mb-0">📝 Recent Posts <span class="badge bg-secondary ms-2"><%= @user["posts_count"] %></span></h5>
+            </div>
+            <div class="card-body">
+              <% if @user["posts"] && @user["posts"].any? %>
+                <div class="list-group list-group-flush">
+                  <% @user["posts"].each do |post| %>
+                    <div class="list-group-item px-0 py-3 border-0 d-flex justify-content-between align-items-start" style="cursor: pointer; transition: all 0.3s ease;" onclick="window.location='<%= cliq_post_path(post["cliq"]["id"], post["id"]) %>'">
+                      <div class="flex-grow-1">
+                        <h6 class="mb-1 fw-bold text-dark">
+                          <%= truncate(post["title"], length: 60) %>
+                        </h6>
+                        <small class="text-muted d-block">
+                          in <strong><%= link_to post["cliq"]["name"], cliq_path(post["cliq"]["id"]), class: "text-decoration-none text-primary" %></strong>
+                          · <%= time_ago_in_words(Time.parse(post["created_at"])) %> ago
+                        </small>
+                      </div>
+                      <% if post["post_type"] == "article" %>
+                        <span class="badge bg-info ms-2">📄</span>
+                      <% elsif post["post_type"] == "question" %>
+                        <span class="badge bg-warning ms-2">❓</span>
+                      <% else %>
+                        <span class="badge bg-secondary ms-2">💬</span>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-muted text-center mb-0">No posts yet.</p>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="alert alert-danger" role="alert">
+          <p class="mb-0">User profile not found.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

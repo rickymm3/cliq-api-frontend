@@ -1,0 +1,13 @@
+-# app/views/layouts/_flash.html.haml
+
+- return unless flash.any?
+
+- flash.each do |type, message|
+  - next if message.blank?
+  - t = type.to_s
+  - css = (t == 'notice' || t == 'success') ? 'alert alert-success' : (t == 'warning' ? 'alert alert-warning' : (['alert','error','danger'].include?(t) ? 'alert alert-danger' : 'alert alert-info'))
+
+  - Array(message).each do |msg|
+    %div{ class: "#{css} alert-dismissible fade show mb-3", role: "alert", data: { turbo_cache: "false" } }
+      = msg
+      %button.btn-close{ type: "button", data: { bs_dismiss: "alert" }, aria: { label: "Close" } }

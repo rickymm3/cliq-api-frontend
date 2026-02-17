@@ -1,0 +1,19 @@
+-# Meta line shown under the title
+- author_name = @post.user&.profile&.username
+%span.text-muted
+  - if author_name
+    Posted by
+    %strong
+      = link_to author_name,
+                profile_path(@post.user.profile),
+                class: "text-decoration-none",
+                data: { turbo_frame: "_top", turbo_action: "advance" }
+    ·
+  = time_ago_in_words(@post.created_at)
+  ago
+  - if @post.cliq
+    · in
+    = link_to @post.cliq.name,
+              cliq_path(@post.cliq),
+              class: "text-decoration-none",
+              data: { turbo_frame: "_top", turbo_action: "advance" }

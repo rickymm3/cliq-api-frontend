@@ -1,0 +1,31 @@
+- partner = conversation.other_participant(current_user)
+- partner_name = partner&.profile&.username.presence || partner&.email.presence || "Deleted user"
+.direct-conversation
+  .direct-conversation__header
+    %div
+      %h2.h5.mb-1= partner_name
+      %p.text-muted.mb-0 Conversation history
+
+  .direct-conversation__messages
+    - if conversation.messages.any?
+      %ul.direct-conversation__message-list
+        - conversation.messages.each do |message_record|
+          = render partial: "direct_messages/message",
+                   locals: { message: message_record }
+    - else
+      .direct-conversation__empty
+        %p.text-muted.mb-0 No messages yet. Say hello!
+
+  .direct-conversation__composer
+    = form_with model: [conversation, message],
+                url: direct_message_messages_path(conversation),
+                local: true do |form|
+      .mb-3
+        = form.text_area :body,
+                         rows: 3,
+                         class: "form-control #{'is-invalid' if message.errors[:body].present?}",
+                         placeholder: "Write a message…"
+        - if message.errors[:body].present?
+          .invalid-feedback= message.errors[:body].to_sentence
+      .text-end
+        = form.submit "Send", class: "btn btn-primary"

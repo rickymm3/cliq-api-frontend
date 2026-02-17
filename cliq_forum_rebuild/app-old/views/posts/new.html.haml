@@ -1,0 +1,5 @@
+-# app/views/posts/new.html.haml
+
+%main.container.py-4
+  = turbo_frame_tag "post_new_block" do
+    = render "posts/new_block", post: (@post || Post.new), cliq: @cliq

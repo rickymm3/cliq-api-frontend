@@ -1,0 +1,53 @@
+-# Locals: cliq:, frame_id: (optional)
+- direct_sub     = current_user&.subscription_for(cliq)
+- inherited_from = current_user&.subscribed_ancestor_for(cliq)
+
+- base_id  = dom_id(cliq, :subscribe_button)
+- frame_id = local_assigns[:frame_id].presence || base_id
+
+- primary_classes = "btn btn-sm d-inline-flex align-items-center gap-2 px-3"
+- solid_classes   = "#{primary_classes} btn-dark"
+- outline_classes = "#{primary_classes} btn-outline-dark"
+- subtle_classes  = "#{primary_classes} btn-outline-secondary"
+
+= turbo_frame_tag(frame_id) do
+  - if current_user.nil?
+    = link_to new_user_session_path,
+              class: solid_classes,
+              data: { turbo_frame: "_top", turbo_action: "advance" } do
+      %i.bi.bi-person-plus-fill{ aria: { hidden: true } }
+      %span Sign in to subscribe
+
+  - elsif direct_sub
+    = button_to subscription_path(direct_sub),
+      method: :delete,
+      params: { context: "cliq_button" },
+      class: outline_classes do
+      %i.bi.bi-check-circle{ aria: { hidden: true } }
+      %span Subscribed
+
+  - elsif inherited_from
+    .d-flex.flex-column.gap-2.align-items-start
+      %span.badge.bg-light.text-dark.d-inline-flex.align-items-center.gap-2
+        %i.bi.bi-arrows-angle-up{ aria: { hidden: true } }
+        %span Subscribed via
+        = link_to inherited_from.name,
+                  cliq_path(inherited_from),
+                  class: "text-decoration-none fw-semibold",
+                  data: { turbo_frame: "_top", turbo_action: "advance" }
+
+      - ancestor_sub = current_user.subscription_for(inherited_from)
+      - if ancestor_sub
+        = button_to subscription_path(ancestor_sub),
+          method: :delete,
+          params: { context: "cliq_button", target_cliq_id: cliq.id },
+          class: subtle_classes do
+          %i.bi.bi-x-circle{ aria: { hidden: true } }
+          %span Leave parent
+
+  - else
+    = button_to subscriptions_path(cliq_id: cliq.id),
+      method: :post,
+      class: solid_classes do
+      %i.bi.bi-plus-circle{ aria: { hidden: true } }
+      %span Subscribe

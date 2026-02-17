@@ -1,0 +1,13 @@
+%header.profile-header.mb-4
+  %h2.h4.mb-1= "#{profile.username.titleize}'s Profile"
+  %p.text-muted.mb-3
+    Username:
+    %span.fw-semibold= profile.username
+
+  - if user_signed_in? && !owner
+    .d-flex.flex-wrap.gap-2
+      = render partial: "followed_users/follow_button", locals: { user: profile.user }
+      = link_to "Message",
+                direct_messages_path(user_id: profile.user.id),
+                class: "btn btn-outline-primary btn-sm",
+                data: { turbo_method: :post, turbo_frame: "_top" }

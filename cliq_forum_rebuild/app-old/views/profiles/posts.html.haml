@@ -1,0 +1,22 @@
+= turbo_frame_tag 'profile_content' do
+  = render 'profiles/header', profile: @profile, owner: @owner_viewing
+  = render 'profiles/nav', profile: @profile, owner: @owner_viewing, current_section: @section
+
+  .profile-section
+    .d-flex.align-items-center.gap-2.mb-3
+      %span.text-muted Sort by:
+      = link_to "Recent Activity",
+                posts_profile_path(@profile, sort: 'recent_activity'),
+                class: (@sort == 'recent_activity' ? 'fw-semibold' : ''),
+                data: { turbo_frame: 'profile_content', turbo_action: 'advance' }
+      %span.text-muted •
+      = link_to "Created",
+                posts_profile_path(@profile, sort: 'created'),
+                class: (@sort == 'created' ? 'fw-semibold' : ''),
+                data: { turbo_frame: 'profile_content', turbo_action: 'advance' }
+
+    - if @posts.present?
+      = render 'cliqs/posts'
+      = render 'cliqs/pager', pagy: @pagy, url: @next_page_url
+    - else
+      %p.text-muted.mb-0 No posts yet.

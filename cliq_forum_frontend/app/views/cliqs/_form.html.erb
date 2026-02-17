@@ -1,0 +1,17 @@
+<div class="mb-3">
+  <%= form.label "cliq[name]", "Cliq Name", class: "form-label fw-bold" %>
+  <%= form.text_field "cliq[name]", 
+      class: "form-control", 
+      placeholder: "e.g., Jazz Music, Rock Climbing, etc.",
+      required: true %>
+  <small class="text-muted">Choose a clear, descriptive name</small>
+</div>
+
+<div class="mb-4">
+  <%= form.label "cliq[description]", "Description", class: "form-label fw-bold" %>
+  <%= form.text_area "cliq[description]",
+      class: "form-control",
+      rows: 3,
+      placeholder: "What is this Cliq about? (optional)" %>
+  <small class="text-muted">Help others understand the topic</small>
+</div>

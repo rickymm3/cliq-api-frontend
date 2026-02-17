@@ -1,0 +1,9 @@
+- outgoing = message.sender_id == current_user.id
+%li.direct-message{ class: outgoing ? "direct-message--outgoing" : "direct-message--incoming" }
+  .direct-message__bubble
+    .direct-message__meta
+      - sender_name = message.sender.profile&.username.presence || message.sender.email
+      %span.direct-message__author= outgoing ? "You" : sender_name
+      %span.direct-message__time= l(message.created_at, format: :short)
+    .direct-message__body
+      = simple_format(h(message.body))

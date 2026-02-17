@@ -1,0 +1,8 @@
+-# app/views/followings/index.html.haml
+= turbo_frame_tag 'profile_content' do
+  %h2 My Followings
+  %ul.followings-list
+    - @followings.each do |followed_user|
+      %li
+        = link_to followed_user.profile.username, profile_path(followed_user), data: { turbo_frame: "profile_content" }
+        = button_to "Unfollow", following_path(current_user.active_followings.find_by(followed: followed_user)), method: :delete, data: { turbo_frame: "profile_content" }

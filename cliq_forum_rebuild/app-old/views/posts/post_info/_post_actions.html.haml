@@ -1,0 +1,12 @@
+-# Post action buttons (Bootstrap)
+.btn-group.btn-group-sm
+  = link_to "Reply",
+            new_post_reply_path(@post),
+            class: "btn btn-primary",
+            data: { turbo_frame: "_top", turbo_action: "advance" }
+
+  - if current_user && current_user == @post.user
+    = link_to "Edit",
+              edit_post_path(@post),
+              class: "btn btn-outline-secondary",
+              data: { turbo_frame: "_top", turbo_action: "advance" }

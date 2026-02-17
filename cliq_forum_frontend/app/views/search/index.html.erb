@@ -1,0 +1,175 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-lg-12">
+      <!-- Search Header -->
+      <div class="mb-4">
+        <h1 class="display-6 mb-4">Search</h1>
+        
+        <!-- Search Form -->
+        <form action="<%= search_path %>" method="get" class="mb-4">
+          <div class="input-group input-group-lg">
+            <%= text_field_tag :q, @query, placeholder: "Search cliqs and posts...", class: "form-control", autofocus: true %>
+            <button class="btn btn-primary" type="submit">Search</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Results -->
+      <% if @query.present? %>
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" role="tablist">
+          <li class="nav-item" role="presentation">
+            <% all_active = @search_type == 'all' ? 'active' : '' %>
+            <a href="<%= search_path(q: @query, type: 'all') %>" class="nav-link <%= all_active %>">
+              🔍 All Results 
+              <% if @cliq_results.any? || @post_results.any? %>
+                <span class="badge bg-secondary"><%= (@cliq_results.count || 0) + (@post_results.count || 0) %></span>
+              <% end %>
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <% cliqs_active = @search_type == 'cliqs' ? 'active' : '' %>
+            <a href="<%= search_path(q: @query, type: 'cliqs') %>" class="nav-link <%= cliqs_active %>">
+              🏠 Cliqs 
+              <% if @cliq_pagination["total_count"] %>
+                <span class="badge bg-secondary"><%= @cliq_pagination["total_count"] %></span>
+              <% end %>
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <% posts_active = @search_type == 'posts' ? 'active' : '' %>
+            <a href="<%= search_path(q: @query, type: 'posts') %>" class="nav-link <%= posts_active %>">
+              📝 Posts 
+              <% if @post_pagination["total_count"] %>
+                <span class="badge bg-secondary"><%= @post_pagination["total_count"] %></span>
+              <% end %>
+            </a>
+          </li>
+        </ul>
+
+        <!-- Results Content -->
+        <% if @cliq_results.empty? && @post_results.empty? %>
+          <div class="alert alert-info" role="alert">
+            <p class="mb-0">
+              No results found for "<strong><%= @query %></strong>". 
+              Try a different search term or <%= link_to "browse all categories", root_path %>.
+            </p>
+          </div>
+        <% else %>
+          <!-- Cliqs Results -->
+          <% if (@search_type == 'all' || @search_type == 'cliqs') && @cliq_results.any? %>
+            <div class="mb-4">
+              <h5 class="mb-3">
+                🏠 Cliqs <span class="text-muted">(<%= @cliq_pagination["total_count"] %> found)</span>
+              </h5>
+              <div class="row g-3 mb-4">
+                <% @cliq_results.each do |cliq| %>
+                  <div class="col-md-6 col-lg-4">
+                    <%= link_to cliq_path(cliq["id"]), class: "card border-0 shadow-sm text-decoration-none text-dark h-100", style: "transition: all 0.3s ease;" do %>
+                      <div class="card-body">
+                        <h5 class="card-title mb-2"><%= cliq["name"] %></h5>
+                        <p class="card-text text-muted small mb-3">
+                          <%= truncate(cliq["description"], length: 120) %>
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                          <small class="badge bg-secondary">
+                            <%= cliq["posts_count"] || 0 %> posts
+                          </small>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+              <% if @cliq_pagination["total_pages"] && @cliq_pagination["total_pages"] > 1 %>
+                <%= render "pagination", pagination: @cliq_pagination, query: @query, type: "cliqs" %>
+              <% end %>
+            </div>
+          <% end %>
+
+          <!-- Posts Results -->
+          <% if (@search_type == 'all' || @search_type == 'posts') && @post_results.any? %>
+            <div class="mb-4">
+              <h5 class="mb-3">
+                📝 Posts <span class="text-muted">(<%= @post_pagination["total_count"] %> found)</span>
+              </h5>
+              <% @post_results.each do |post| %>
+                <div class="card border-0 shadow-sm text-dark d-block mb-3" style="transition: all 0.3s ease; cursor: pointer;" onclick="window.location='<%= cliq_post_path(post["cliq"]["id"], post["id"]) %>'">
+                  <div class="card-body">
+                    <!-- Cliq Hierarchy Breadcrumb -->
+                    <div class="mb-2">
+                      <small class="text-muted">
+                        <% if post["cliq"]["parent_cliq"] %>
+                          <%= link_to post["cliq"]["parent_cliq"]["name"], cliq_path(post["cliq"]["parent_cliq"]["id"]), class: "text-decoration-none text-muted fw-semibold" %>
+                          <span class="text-muted mx-1">›</span>
+                        <% end %>
+                        <strong class="text-primary"><%= link_to post["cliq"]["name"], cliq_path(post["cliq"]["id"]), class: "text-decoration-none text-primary" %></strong>
+                      </small>
+                    </div>
+
+                    <!-- Post Type Badge and Title -->
+                    <div class="mb-2">
+                      <h5 class="card-title mb-0 fw-bold">
+                        <% if post["post_type"] == "article" %>
+                          <span class="badge bg-info me-2">📄 Article</span>
+                        <% elsif post["post_type"] == "question" %>
+                          <span class="badge bg-warning me-2">❓ Question</span>
+                        <% else %>
+                          <span class="badge bg-secondary me-2">💬 Discussion</span>
+                        <% end %>
+                        <%= post["title"] %>
+                      </h5>
+                    </div>
+
+                    <!-- Post Content Preview -->
+                    <p class="card-text text-muted mb-3" style="line-height: 1.4;">
+                      <%= truncate(post["content"], length: 150, omission: "...") %>
+                    </p>
+
+                    <!-- Post Metadata -->
+                    <div class="d-flex justify-content-between align-items-center">
+                      <small class="text-muted">
+                        by <strong><%= link_to post["user"]["email"], user_profile_path(post["user"]["id"]), class: "text-decoration-none text-dark fw-semibold" %></strong>
+                      </small>
+                      <small class="text-muted">
+                        <%= time_ago_in_words(Time.parse(post["created_at"])) %> ago
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+              <% if @post_pagination["total_pages"] && @post_pagination["total_pages"] > 1 %>
+                <%= render "pagination", pagination: @post_pagination, query: @query, type: "posts" %>
+              <% end %>
+            </div>
+          <% end %>
+
+          <!-- No results for selected type -->
+          <% if @search_type != 'all' && ((@search_type == 'cliqs' && @cliq_results.empty?) || (@search_type == 'posts' && @post_results.empty?)) %>
+            <div class="alert alert-info" role="alert">
+              <p class="mb-0">
+                No <%= @search_type %> found matching "<strong><%= @query %></strong>". 
+                Try <%= link_to "searching all results", search_path(q: @query, type: "all") %>.
+              </p>
+            </div>
+          <% end %>
+        <% end %>
+      <% else %>
+        <div class="alert alert-secondary" role="alert">
+          <p class="mb-0">Enter a search term above to find cliqs and posts.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+  .card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-2px);
+  }
+  
+  .nav-link {
+    cursor: pointer;
+  }
+</style>

@@ -1,0 +1,25 @@
+<nav aria-label="Page navigation" class="mb-4">
+  <ul class="pagination justify-content-center">
+    <% if pagination["page"] > 1 %>
+      <li class="page-item">
+        <%= link_to "← Previous", search_path(q: @query, type: type, page: pagination["page"] - 1), class: "page-link" %>
+      </li>
+    <% end %>
+
+    <% (1..pagination["total_pages"]).each do |page_num| %>
+      <li class="page-item <%= 'active' if page_num == pagination["page"] %>">
+        <% if page_num == pagination["page"] %>
+          <span class="page-link"><%= page_num %></span>
+        <% else %>
+          <%= link_to page_num, search_path(q: @query, type: type, page: page_num), class: "page-link" %>
+        <% end %>
+      </li>
+    <% end %>
+
+    <% if pagination["page"] < pagination["total_pages"] %>
+      <li class="page-item">
+        <%= link_to "Next →", search_path(q: @query, type: type, page: pagination["page"] + 1), class: "page-link" %>
+      </li>
+    <% end %>
+  </ul>
+</nav>

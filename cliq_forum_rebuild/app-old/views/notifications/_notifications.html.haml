@@ -1,0 +1,7 @@
+-# app/views/notifications/_notifications.html.haml
+- unread_count = current_user.notifications.unread.count
+%div.notifications-widget
+  %i.fa.fa-bell
+  - if unread_count.positive?
+    %span.badge= unread_count
+  = link_to "View Notifications", notifications_path

@@ -1,0 +1,9 @@
+<turbo-frame id="subscribe-button-<%= cliq_id %>">
+  <% if logged_in? %>
+    <% if is_subscribed %>
+      <%= link_to "✓ Subscribed", unsubscribe_cliq_path(cliq_id), method: :delete, class: "btn btn-success btn-sm ms-3", style: "min-width: 120px;", data: { turbo: true } %>
+    <% else %>
+      <%= link_to "+ Subscribe", subscribe_cliq_path(cliq_id), method: :post, class: "btn btn-outline-success btn-sm ms-3", style: "min-width: 120px;", data: { turbo: true } %>
+    <% end %>
+  <% end %>
+</turbo-frame>

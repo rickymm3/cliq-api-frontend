@@ -1,0 +1,32 @@
+<div class="d-flex align-items-center justify-content-between p-2 mb-3 bg-light rounded-3 border">
+  <div class="d-flex align-items-center">
+    <span class="text-secondary small fw-bold text-uppercase me-2"><i class="bi bi-sliders me-1"></i>Filter</span>
+  </div>
+
+  <%= form_with url: cliq_path(@cliq["id"]), method: :get, 
+      data: { 
+        turbo_frame: "posts_feed", 
+        turbo_action: "advance",
+        controller: "auto-submit",
+        action: "change->auto-submit#submit"
+      }, 
+      class: "d-flex align-items-center" do |f| %>
+
+    <div class="form-check form-switch m-0">
+      <%= f.check_box :exclude_children, 
+          { 
+            class: "form-check-input", 
+            role: "switch", 
+            id: "exclude_children_switch", 
+            checked: params[:exclude_children] == "1" 
+          }, 
+          "1", "0" %>
+      <label class="form-check-label text-muted small fw-semibold ms-1" for="exclude_children_switch">
+        Direct posts only
+      </label>
+    </div>
+  <% end %>
+
+  <!-- Placeholder for future Sort dropdowns -->
+  <div class="d-none d-md-block"></div>
+</div>

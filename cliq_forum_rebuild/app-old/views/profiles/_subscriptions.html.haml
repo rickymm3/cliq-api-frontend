@@ -1,0 +1,34 @@
+-# Renders a hierarchical view of the user's subscribed cliqs with enable/disable pills.
+-# locals: user:
+- return unless current_user&.id == user.id
+
+%section.mt-6
+  %h2.text-lg.font-semibold.mb-3 Subscribed Cliqs
+
+  - direct_subs = user.subscriptions.includes(cliq: [:parent_cliq, :child_cliqs]).to_a
+  - if direct_subs.blank?
+    %p.text-sm.text-gray-500 You haven't subscribed to any Cliqs yet.
+  - else
+    - subs_by_id = direct_subs.index_by(&:cliq_id)
+
+    - roots = {}
+    - direct_subs.each do |s|
+      - path = []
+      - node = s.cliq
+      - while node
+        - path.unshift(node)
+        - node = node.parent_cliq
+      - roots[path.first.id] ||= []
+      - roots[path.first.id] << path
+
+    - roots.each do |_, paths|
+      - root = paths.first.first
+      - sub_for_root = subs_by_id[root.id]
+
+      - if root.parent_cliq_id.nil? && sub_for_root.nil?
+        - grouped = paths.group_by { |p| p[1] }.except(nil)
+        - grouped.each do |child, child_paths|
+          - next unless child
+          = render "profiles/subscriptions_tree", user: user, root: child, paths: child_paths.map { |p| p.drop(1) }, subs_by_id: subs_by_id
+      - else
+        = render "profiles/subscriptions_tree", user: user, root: root, paths: paths.uniq, subs_by_id: subs_by_id

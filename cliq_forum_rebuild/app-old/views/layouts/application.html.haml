@@ -1,0 +1,20 @@
+!!!
+%html
+  %head
+    %meta{content: "text/html; charset=UTF-8", "http-equiv" => "Content-Type"}/
+    %title CliqNew
+    %meta{content: "width=device-width,initial-scale=1", name: "viewport"}/
+    = csrf_meta_tags
+    = csp_meta_tag
+    = stylesheet_link_tag "application", "data-turbo-track": "reload"
+    = javascript_include_tag "application", "data-turbo-track": "reload", type: "module"
+  %body
+    .header
+      = render "/layouts/top"
+    .container
+      .flash 
+        = turbo_frame_tag "flash" do
+          = render "layouts/flash"  # whatever partial you use to show flash notices/alerts
+      #turbo-visit-placeholder
+      .main
+        = yield

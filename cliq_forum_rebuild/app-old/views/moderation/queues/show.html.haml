@@ -1,0 +1,29 @@
+= turbo_frame_tag "main_content" do
+  .container.py-4
+    %h1.h4.d-flex.align-items-center.justify-content-between
+      Moderation queue — #{@cliq.name}
+      %span.badge.text-bg-light Rank: #{@cliq.rank_name.titleize}
+
+    = turbo_stream_from Moderation::Broadcaster.queue_stream_name(@cliq)
+
+    .mb-3
+      %small.text-muted
+        Support capacity per user: #{@support_capacity}
+
+    #moderation_queue
+      - if @pending_reports.any?
+        = render partial: "moderation/queues/report", collection: @pending_reports, as: :report
+      - else
+        .alert.alert-success.mb-0 No pending reports. 🎉
+
+    %section.mt-4
+      %h2.h5 Active moderators
+      - if @active_moderators.any?
+        %ul.list-unstyled.mb-0
+          - @active_moderators.each do |role|
+            %li.mb-2
+              %strong= role.user.profile&.username || role.user.email
+              %small.text-muted ms-2
+                since #{role.started_at.to_date.to_s(:long)}
+      - else
+        %p.text-muted.mb-0 No active moderators.

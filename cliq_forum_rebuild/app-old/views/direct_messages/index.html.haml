@@ -1,0 +1,36 @@
+- content_for :page_title, "Direct Messages"
+
+.direct-messages
+  .direct-messages__layout
+    .direct-messages__sidebar
+      .direct-messages__panel
+        .direct-messages__panel-header
+          %h1.h5.mb-0 Direct Messages
+          %p.text-muted.small.mb-0 Manage conversations and start new ones.
+
+        .direct-messages__search
+          #direct-message-search-container{ data: { controller: "search" } }
+            = form_with url: search_direct_messages_path,
+                        method: :get,
+                        class: "direct-message-search__form",
+                        role: "search",
+                        data: { turbo_frame: "direct-message-search-results" } do |form|
+              = form.text_field :q,
+                                value: params[:q],
+                                class: "form-control direct-message-search__input",
+                                placeholder: "Search users…",
+                                type: "search",
+                                autocomplete: "off",
+                                "aria-label": "Search users",
+                                data: { search_target: "input",
+                                        action: "input->search#search focus->search#showDropdown blur->search#hideDropdown" }
+            = turbo_frame_tag "direct-message-search-results" do
+              = render "direct_messages/search_results"
+
+      .direct-messages__conversations
+        = render partial: "direct_messages/conversation_list_wrapper",
+                 locals: { conversations: @conversations, active_conversation: @conversation }
+
+    .direct-messages__conversation
+      = render partial: "direct_messages/conversation_wrapper",
+               locals: { conversation: @conversation, message: @message }

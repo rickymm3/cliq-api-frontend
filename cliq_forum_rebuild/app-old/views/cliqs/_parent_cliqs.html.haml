@@ -1,0 +1,6 @@
+.cliq-history
+  - current_cliq = cliq
+  - while current_cliq.parent_cliq&.parent_cliq.present?
+    = render '/cliqs/cliq', cliq: current_cliq.parent_cliq
+    - current_cliq = current_cliq.parent_cliq
+    %br

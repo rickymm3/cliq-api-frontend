@@ -1,0 +1,35 @@
+@import 'bootstrap/scss/bootstrap';
+@import 'bootstrap-icons/font/bootstrap-icons';
+@import "@fortawesome/fontawesome-free/scss/fontawesome";
+@import "@fortawesome/fontawesome-free/scss/solid";
+@import "@fortawesome/fontawesome-free/scss/regular";
+@import "@fortawesome/fontawesome-free/scss/brands";
+// Mixins
+@import "mixins/media";
+
+// Configuration
+@import "config/variables";
+@import "config/reset";
+
+// Components
+@import "components/btn";
+@import "components/error_message";
+@import "components/form";
+@import "components/cliq";
+@import "components/search";
+@import "components/posts";
+@import "components/hierarchy_dropdown";
+@import "components/breadcrumbs";
+@import "components/post_show";
+@import "components/subscriptions";
+@import "components/cliq_theme";
+@import "components/post_path";
+@import "components/sidebars";
+@import "components/follow";
+@import "components/direct_messages";
+
+// Layouts
+@import "layouts/container";
+@import "layouts/header";
+
+@import 'actiontext.css';

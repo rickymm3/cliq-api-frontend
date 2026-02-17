@@ -1,0 +1,845 @@
+@import '../../../node_modules/bootstrap/scss/bootstrap';
+@import '../../../node_modules/bootstrap-icons/font/bootstrap-icons';
+@import '../../../node_modules/trix/dist/trix';
+@import './actiontext';
+// ============================================
+// RESPONSIVE SIDEBAR LAYOUT
+// ============================================
+
+:root {
+  --sidebar-width: 280px;
+  --sidebar-width-condensed: 88px;
+  --sidebar-width-mobile: 100%;
+  --sidebar-transition: 0.3s ease-in-out;
+}
+
+html, body {
+  background-color: #f8f9fa;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: 100%;
+}
+
+// Main wrapper for sidebar + content layout
+.main-wrapper {
+  display: flex;
+  min-height: 100vh;
+  flex-wrap: nowrap;
+  position: relative;
+}
+
+// SIDEBAR STYLES - Base styles for all sizes
+#sidebar {
+  width: var(--sidebar-width);
+  background-color: #fff;
+  border-right: 1px solid #dee2e6;
+  overflow-y: auto;
+  max-height: 100vh;
+  height: 100vh;
+  position: relative;
+  top: 0;
+  padding-top: 0 !important;
+  flex-shrink: 0;
+  z-index: 1040;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(0);
+}
+
+// Mobile screens - 576px and below
+@media (max-width: 576px) {
+  #sidebar {
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+    position: relative !important;
+    display: flex !important;
+    flex-shrink: 0 !important;
+    transform: translateX(0) !important;
+  }
+
+  #sidebar .sidebar-header {
+    padding: 0.75rem 0.5rem;
+  }
+
+  #sidebar .sidebar-header .h4,
+  #sidebar .sidebar-header h4 {
+    display: none !important;
+  }
+
+  #sidebar .sidebar-search {
+    display: none !important;
+  }
+
+  #sidebar .link-text {
+    display: none !important;
+  }
+
+  #sidebar .sidebar-link,
+  #sidebar .btn {
+    justify-content: center !important;
+    padding: 0.5rem !important;
+  }
+
+  #sidebar .sidebar-link i,
+  #sidebar .btn i {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    font-size: 1.25rem;
+  }
+
+  #sidebar .sidebar-section-title {
+    display: none !important;
+  }
+
+  #sidebar .sidebar-section {
+    padding: 0.5rem 0 !important;
+  }
+
+  // EXPANDED STATE - Override for mobile when expanded
+  #sidebar.expanded .sidebar-header {
+    padding: 1rem !important;
+  }
+
+  #sidebar.expanded .sidebar-header .h4,
+  #sidebar.expanded .sidebar-header h4 {
+    display: block !important;
+  }
+
+  #sidebar.expanded .sidebar-search {
+    display: block !important;
+  }
+
+  #sidebar.expanded .link-text {
+    display: inline !important;
+  }
+
+  #sidebar.expanded .sidebar-link,
+  #sidebar.expanded .btn {
+    justify-content: flex-start !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  #sidebar.expanded .sidebar-link i,
+  #sidebar.expanded .btn i {
+    margin-right: 1rem !important;
+    margin-left: 0 !important;
+    font-size: 1.25rem;
+  }
+
+  #sidebar.expanded .sidebar-section-title {
+    display: block !important;
+  }
+
+  #sidebar.expanded .sidebar-section {
+    padding: 1rem 0 !important;
+  }
+}
+
+// Tablet/Small Desktop - 577px to 900px
+@media (min-width: 577px) and (max-width: 900px) {
+  #sidebar {
+    width: var(--sidebar-width-condensed) !important;
+    position: relative !important;
+    transform: translateX(0) !important;
+  }
+
+  #sidebar .sidebar-header .h4,
+  #sidebar .sidebar-header h4 {
+    display: none !important;
+  }
+
+  #sidebar .input-group,
+  #sidebar .btn-close {
+    display: none !important;
+  }
+
+  #sidebar .sidebar-search {
+    display: none !important;
+  }
+
+  #sidebar .link-text {
+    display: none !important;
+  }
+
+  #sidebar .sidebar-link,
+  #sidebar .btn {
+    justify-content: center !important;
+    padding: 0.75rem !important;
+  }
+
+  #sidebar .sidebar-link i,
+  #sidebar .btn i {
+    margin-right: 0 !important;
+    font-size: 1.5rem;
+  }
+
+  #sidebar .sidebar-section-title {
+    display: none;
+  }
+
+  // EXPANDED STATE - Override for tablet when expanded
+  #sidebar.expanded {
+    width: var(--sidebar-width) !important;
+  }
+
+  #sidebar.expanded .sidebar-header {
+    padding: 1rem !important;
+  }
+
+  #sidebar.expanded .sidebar-header .h4,
+  #sidebar.expanded .sidebar-header h4 {
+    display: block !important;
+  }
+
+  #sidebar.expanded .sidebar-search {
+    display: block !important;
+  }
+
+  #sidebar.expanded .link-text {
+    display: inline !important;
+  }
+
+  #sidebar.expanded .sidebar-link,
+  #sidebar.expanded .btn {
+    justify-content: flex-start !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  #sidebar.expanded .sidebar-link i,
+  #sidebar.expanded .btn i {
+    margin-right: 1rem !important;
+    margin-left: 0 !important;
+    font-size: 1.5rem;
+  }
+
+  #sidebar.expanded .sidebar-section-title {
+    display: block !important;
+  }
+
+  #sidebar.expanded .sidebar-section {
+    padding: 1rem 0 !important;
+  }
+}
+
+// Desktop - 901px and above
+@media (min-width: 901px) {
+  #sidebar {
+    width: var(--sidebar-width) !important;
+    min-width: var(--sidebar-width) !important;
+    position: relative !important;
+    display: flex !important;
+    flex-shrink: 0 !important;
+    transform: translateX(0) !important;
+  }
+
+  #sidebar .sidebar-header .h4,
+  #sidebar .sidebar-header h4 {
+    display: block !important;
+  }
+
+  #sidebar .sidebar-search {
+    display: block !important;
+  }
+
+  #sidebar .link-text {
+    display: inline !important;
+  }
+
+  #sidebar .sidebar-link,
+  #sidebar .btn {
+    justify-content: flex-start !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  #sidebar .sidebar-link i,
+  #sidebar .btn i {
+    margin-right: 1rem !important;
+    font-size: 1.25rem;
+  }
+
+  #sidebar .sidebar-section-title {
+    display: block !important;
+  }
+}
+
+// ============================================
+// SIDEBAR TOGGLE & EXPANDED STATE
+// ============================================
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1039;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.sidebar-overlay.visible {
+  display: block;
+  opacity: 1;
+}
+
+// ============================================
+// SIDEBAR EXPANDED POSITIONING (all breakpoints)
+// ============================================
+
+// Reply Bar Positioning (Align with Main Content)
+.reply-bar {
+  // Default (Mobile)
+  left: 60px;
+
+  @media (min-width: 577px) and (max-width: 900px) {
+    left: var(--sidebar-width-condensed);
+  }
+
+  @media (min-width: 901px) {
+    left: var(--sidebar-width);
+  }
+}
+
+@media (max-width: 900px) {
+  #sidebar.expanded {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    width: var(--sidebar-width) !important;
+    min-width: var(--sidebar-width) !important;
+    max-width: var(--sidebar-width) !important;
+    max-height: unset !important;
+    height: 100vh !important;
+    z-index: 1040 !important;
+    box-shadow: 1px 0 5px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-in-out;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.sidebar-open-btn,
+.sidebar-close-btn {
+  padding: 0.4rem 0.6rem !important;
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #495057;
+  text-decoration: none;
+  border: none;
+  background: none;
+
+  &:hover {
+    color: #0d6efd;
+  }
+}
+
+// Default: hide both buttons
+.sidebar-open-btn {
+  display: flex !important;
+}
+
+.sidebar-close-btn {
+  display: none !important;
+}
+
+// On mobile/tablet - show open button, hide close
+@media (max-width: 900px) {
+  .sidebar-open-btn {
+    display: flex !important;
+  }
+
+  .sidebar-close-btn {
+    display: none !important;
+  }
+
+  // When expanded - hide open, show close
+  #sidebar.expanded .sidebar-open-btn {
+    display: none !important;
+  }
+
+  #sidebar.expanded .sidebar-close-btn {
+    display: flex !important;
+  }
+}
+
+// On desktop - hide both buttons
+@media (min-width: 901px) {
+  .sidebar-open-btn {
+    display: none !important;
+  }
+
+  .sidebar-close-btn {
+    display: none !important;
+  }
+}
+
+.sidebar-logo {
+  flex-shrink: 0;
+}
+
+// Sidebar header
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+
+  h5 {
+    margin-bottom: 0;
+  }
+}
+
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+}
+
+// Sidebar sections
+.sidebar-section {
+  padding: 1rem 0;
+  border-bottom: 1px solid #f1f3f5;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.sidebar-section-title {
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-section-content {
+  a, button {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border: none;
+    background: none;
+    color: #495057;
+    text-decoration: none;
+    transition: all var(--sidebar-transition);
+    
+    &:hover {
+      background-color: #f8f9fa;
+      color: #0d6efd;
+      padding-left: 1.25rem;
+    }
+    
+    &.active {
+      background-color: #e7f1ff;
+      color: #0d6efd;
+      font-weight: 500;
+      border-left: 3px solid #0d6efd;
+      padding-left: calc(1rem - 3px);
+    }
+  }
+}
+
+.sidebar-link {
+  display: flex !important;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: #212529;
+  border-radius: 2rem; // Capsule hover effect like X
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #000;
+  }
+  
+  &.active {
+    font-weight: 700;
+    
+    i {
+      -webkit-text-stroke: 1px; // Faux bold icon
+    }
+  }
+
+  i {
+    font-size: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; // Fixed width for icon alignment
+  }
+}
+
+.link-text {
+  font-size: 1.1rem;
+}
+
+// MAIN CONTENT AREA
+.main-content {
+  flex: 1;
+  flex-basis: 0;
+  min-width: 0;
+  padding: 1.5rem;
+  overflow-y: auto;
+  max-height: 100vh;
+  flex-shrink: 1;
+  
+  @media (max-width: 576px) {
+    padding: 1rem;
+    flex-grow: 1;
+  }
+}
+
+// ============================================
+// SUBSCRIBE BUTTON RESPONSIVE
+// ============================================
+
+.subscribe-btn {
+  min-width: 120px;
+  margin-left: 0.75rem;
+}
+
+.subscribe-btn .btn-text {
+  display: inline;
+}
+
+// Mobile - icon only
+@media (max-width: 576px) {
+  .subscribe-btn {
+    min-width: auto;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+  }
+
+  .subscribe-btn i {
+    font-size: 1rem;
+    margin-right: 0 !important;
+  }
+
+  .subscribe-btn .btn-text {
+    display: none;
+  }
+}
+
+// ============================================
+// PAGE SEARCH BAR
+// ============================================
+
+.sticky-search-bar {
+  padding: 0;
+}
+
+.sticky-search-bar form {
+  max-width: 100%;
+}
+
+.sticky-search-bar .input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.sticky-search-bar .form-control {
+  flex: 1;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+.sticky-search-bar .btn-primary {
+  padding: 0.5rem 1rem;
+  white-space: nowrap;
+}
+
+// ============================================
+// FEED PAGE TABS
+// ============================================
+
+.nav-pills {
+  flex-wrap: wrap;
+}
+
+.nav-pills .nav-link {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+// Shrink tabs on smaller screens
+@media (max-width: 576px) {
+  .nav-pills .nav-link {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+// ============================================
+// NAVBAR & BRANDING
+// ============================================
+
+.navbar {
+  border-bottom: 1px solid #dee2e6;
+  background-color: #fff !important;
+  z-index: 1030;
+  
+  &.bg-dark {
+    background-color: #212529 !important;
+  }
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #0d6efd !important;
+  
+  &:hover {
+    color: #0b5ed7 !important;
+  }
+}
+
+// ============================================
+// POST CARDS & LIST
+// ============================================
+
+.post-card {
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: box-shadow var(--sidebar-transition);
+  
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.post-type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+  
+  &.discussion {
+    background-color: #e7f3ff;
+    color: #0c5aa0;
+  }
+  
+  &.announcement {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+  
+  &.question {
+    background-color: #f0f0f0;
+    color: #333;
+  }
+}
+
+// ============================================
+// UTILITY CLASSES
+// ============================================
+
+.text-muted-sm {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.cliq-path {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+  
+  a {
+    color: #0d6efd;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Cliq Card Styles
+.cliq-card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
+  }
+}
+// ============================================
+// ANIMATIONS
+// ============================================
+
+@keyframes yellow-fade {
+  0% { background-color: #fff3cd; } // Bootstrap warning-subtle-ish color
+  100% { background-color: transparent; }
+}
+
+.flash-highlight {
+  animation: yellow-fade 2s ease-out forwards;
+}
+
+// Apply fade animation to hash targets (anchor links)
+:target {
+  animation: yellow-fade 2s ease-out forwards;
+}
+
+// Ensure the yellow is visible on bg-light
+@keyframes yellow-fade {
+  0% { background-color: #ffe69c; } // Darker yellow
+  100% { background-color: transparent; }
+}
+
+// ============================================
+// ANIMATIONS FIX (Specificity & Borders)
+// ============================================
+
+@keyframes yellow-fade {
+  0% { 
+    background-color: #ffe69c !important; 
+    box-shadow: 0 0 0 2px #ffc107 !important; // Gold border
+  }
+  100% { 
+    background-color: transparent !important; 
+    box-shadow: none !important;
+  }
+}
+
+// Override previous rules with stronger specificity if needed
+.flash-highlight, .card.flash-highlight {
+  animation: yellow-fade 2.5s ease-out forwards !important;
+}
+
+// Ensure target works even with bg-light
+:target {
+  animation: yellow-fade 2.5s ease-out forwards !important;
+}
+
+// Focus outline for accessibility
+.card:focus {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+// ============================================
+// STICKY HEADER COMPONENT
+// ============================================
+
+.sticky-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.sticky-sentinel {
+  // Sentinel is a normal flow element (not absolutely positioned)
+  // It sits at the very top of the content
+  display: block;
+  height: 1px;
+  width: 100%;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  background-color: transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-bottom: 1px solid transparent;
+  width: 100%;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  
+  // Ensure it sits on top of content
+  &.is-pinned {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-bottom-color: rgba(0,0,0,0.05);
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+
+    // Morph the title
+    .header-title {
+      font-size: 1.25rem !important; // h6 size
+      line-height: 1.2 !important;
+      margin-bottom: 0 !important;
+    }
+
+    // Hide extra metadata/description
+    .header-description, 
+    .header-meta {
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+      margin: 0 !important;
+      display: none; // Prevent layout shift
+    }
+
+    // Collapse button text to icons only
+    .btn-text {
+      max-width: 0;
+      opacity: 0;
+      margin-left: 0 !important;
+      display: inline-block; // Allow width transition
+      overflow: hidden;
+    }
+    
+    // Adjust button padding for icon-only look
+    .btn {
+      padding-left: 0.375rem;
+      padding-right: 0.375rem;
+    }
+  }
+}
+
+// Transitions for smooth morphing
+.header-title,
+.header-description,
+.header-meta {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-text {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block; // Essential for smooth width transition
+  overflow: hidden; // Hide text that overflows
+}
+
+// Ensure buttons in header also transition smoothly
+.sticky-header .btn {
+  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

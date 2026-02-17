@@ -1,0 +1,17 @@
+- menu_classes = ["dropdown-menu", "direct-message-search__dropdown"]
+- menu_classes << "show" if @query.present?
+%div{ class: menu_classes.join(" "), data: { search_target: "dropdown" } }
+  - results = @users || User.none
+  - if results.any?
+    - results.each do |user|
+      - label = user.profile&.username.presence || user.email
+      = link_to direct_messages_path(user_id: user.id),
+                class: "dropdown-item direct-message-search__result",
+                data: { turbo_method: :post,
+                        action: "click->search#select" } do
+        %span.direct-message-search__name= label
+        %span.direct-message-search__action Start chat
+  - elsif @query.present?
+    %span.dropdown-item.text-muted No users found for "#{@query}".
+  - else
+    %span.dropdown-item.text-muted Start typing to find someone.

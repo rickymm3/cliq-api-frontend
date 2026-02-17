@@ -1,0 +1,11 @@
+<%= form_with(url: cliq_posts_path(@cliq["id"].to_i), method: :post, scope: :post, data: { turbo_frame: "_top" }) do |form| %>
+  <%= render "posts/fields", form: form %>
+
+  <div class="d-grid gap-2 d-sm-flex">
+    <%= form.submit "Publish Post", 
+        class: "btn btn-primary btn-lg flex-grow-1",
+        data: { turbo_submits_with: "Publishing..." } %>
+    <%= link_to "Cancel", :back, class: "btn btn-outline-secondary btn-lg" %>
+  </div>
+<% end %>
+

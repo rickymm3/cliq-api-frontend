@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Cliq Forum Frontend" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <% if session[:jwt_token] %>
+      <meta name="auth-token" content="<%= session[:jwt_token] %>">
+    <% end %>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= javascript_importmap_tags %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <script>
+      // Store JWT token in localStorage if available in session
+      <% if session[:jwt_token] %>
+        localStorage.setItem('auth_token', '<%= session[:jwt_token] %>');
+        
+        // Check token expiration every 5 minutes
+        setInterval(() => {
+          const token = localStorage.getItem('auth_token');
+          if (token) {
+            try {
+              const parts = token.split('.');
+              if (parts.length === 3) {
+                const payload = JSON.parse(atob(parts[1]));
+                const expiresIn = (payload.exp * 1000) - Date.now();
+                
+                // Warn user 5 minutes before expiration
+                if (expiresIn > 0 && expiresIn < (5 * 60 * 1000)) {
+                  console.warn('🔐 Your session will expire in 5 minutes');
+                  const minutes = Math.floor(expiresIn / 60000);
+                  if (minutes <= 1) {
+                    document.body.innerHTML = '<div style="text-align: center; padding: 2rem;"><h1>Session Expired</h1><p>Your session has expired. Redirecting to login...</p></div>';
+                    setTimeout(() => { window.location.href = '/logout'; }, 2000);
+                  }
+                } else if (expiresIn <= 0) {
+                  console.warn('🔐 Session expired - redirecting to login');
+                  window.location.href = '/logout';
+                }
+              }
+            } catch (e) {
+              console.error('Error checking token expiration:', e);
+            }
+          }
+        }, 60000); // Check every minute
+      <% end %>
+    </script>
+  </head>
+
+  <body class="bg-light" data-controller="sidebar-toggle">
+    <%#= render "layouts/navbar" %>
+    
+    <div class="main-wrapper">
+      <%= render "layouts/sidebar" %>
+      
+      <div data-sidebar-toggle-target="overlay" class="sidebar-overlay" data-action="click->sidebar-toggle#close"></div>
+      
+      <main class="main-content">
+        <% if notice %>
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= notice %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        <% end %>
+
+        <% if alert %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= alert %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        <% end %>
+
+        <%= yield %>
+      </main>
+    </div>
+    
+  </body>
+</html>

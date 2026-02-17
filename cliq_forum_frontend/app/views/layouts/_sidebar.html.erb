@@ -1,0 +1,120 @@
+<!-- Sidebar -->
+<aside id="sidebar" data-sidebar-toggle-target="sidebar">
+  <div class="sidebar-header d-flex align-items-center justify-content-between p-3 border-bottom">
+    <div class="d-flex align-items-center gap-2 w-100">
+      <button class="btn btn-sm btn-link sidebar-open-btn"
+              data-action="click->sidebar-toggle#open"
+              title="Expand Sidebar">
+        <i class="bi bi-arrow-right"></i>
+      </button>
+      <%= link_to "Cliq", root_path, class: "h4 text-decoration-none text-dark mb-0 fw-bold sidebar-logo" %>
+    </div>
+    <button class="btn btn-sm btn-link sidebar-close-btn"
+            data-action="click->sidebar-toggle#close"
+            title="Close Sidebar">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <div class="sidebar-search p-3 border-bottom">
+    <form action="<%= search_path %>" method="get">
+      <div class="input-group input-group-sm">
+        <%= text_field_tag :q, "", placeholder: "Search cliqs...", class: "form-control", id: "sidebar-search" %>
+        <button class="btn btn-outline-secondary" type="submit">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <nav class="sidebar-nav">
+    <!-- User Profile & Actions -->
+    <% if logged_in? %>
+      <div class="sidebar-section">
+        <%# Removed title as it is just one link now %>
+        <div class="sidebar-section-content">
+          <%= link_to dashboard_path, class: "sidebar-link #{current_page?(dashboard_path) ? 'active' : ''}", title: "Profile" do %>
+            <i class="bi bi-person-circle me-3"></i>
+            <span class="link-text">Profile</span>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <div class="sidebar-section">
+        <div class="sidebar-section-content">
+          <div class="d-grid gap-2">
+            <%= link_to signup_path, class: "btn btn-primary d-flex align-items-center justify-content-center" do %>
+              <i class="bi bi-person-plus-fill me-2 d-xl-none"></i>
+              <span class="d-none d-xl-inline">Log In / Sign Up</span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Home -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-content">
+        <%= link_to root_path, class: "sidebar-link #{current_page?(root_path) ? 'active' : ''}", title: "Home" do %>
+          <i class="bi bi-house-door me-3"></i>
+          <span class="link-text">Home</span>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Main Cliqs -->
+    <% if @main_cliqs.present? %>
+      <div class="sidebar-section">
+        <div class="sidebar-section-content">
+          <% @main_cliqs.each do |cliq| %>
+            <%= link_to cliq_path(cliq["id"]), 
+                class: "sidebar-link #{current_page?(cliq_path(cliq['id'])) ? 'active' : ''}",
+                title: cliq["name"] do %>
+              <i class="bi <%= icon_for_cliq(cliq["name"]) %> me-3"></i>
+              <span class="link-text"><%= cliq["name"] %></span>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Explore All Cliqs -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-content">
+        <%= link_to explore_path, class: "sidebar-link", title: "Explore" do %>
+          <i class="bi bi-search me-3"></i>
+          <span class="link-text">Explore</span>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Your Subscriptions (if logged in) -->
+    <% if logged_in? && @user_subscriptions.present? %>
+      <div class="sidebar-section">
+        <div class="sidebar-section-content">
+          <% @user_subscriptions.each do |subscription| %>
+            <% cliq = subscription["cliq"] %>
+            <%= link_to cliq_path(cliq["id"]), 
+                class: "sidebar-link #{current_page?(cliq_path(cliq['id'])) ? 'active' : ''}",
+                title: cliq["name"] do %>
+              <i class="bi <%= icon_for_cliq(cliq["name"]) %> me-3"></i>
+              <span class="link-text"><%= cliq["name"] %></span>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Feed Link (only if logged in) -->
+    <% if logged_in? %>
+      <div class="sidebar-section">
+        <div class="sidebar-section-content">
+          <%= link_to feed_path, class: "sidebar-link #{current_page?(feed_path) ? 'active' : ''}", title: "My Feed" do %>
+            <i class="bi bi-newspaper me-3"></i>
+            <span class="link-text">My Feed</span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </nav>
+</aside>

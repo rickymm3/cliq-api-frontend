@@ -1,0 +1,23 @@
+-# Right-side cliq info panel (sticky wrapper applied in the page)
+.sidebar-cliq-info.rounded-2xl.bg-white.shadow-sm.border.border-slate-200.p-5.mb-6
+  .flex.items-center.justify-between.gap-4
+    .min-w-0
+      %h1.text-2xl.font-semibold.tracking-tight.text-slate-900.truncate= @cliq.name
+      - if @cliq.respond_to?(:description) && @cliq.description.present?
+        %p.mt-1.text-slate-600.text-sm= @cliq.description
+    .shrink-0.flex.items-center.gap-2
+      = render "cliqs/subscribe_button", cliq: @cliq, frame_id: "#{dom_id(@cliq, :subscribe_button)}__sidebar"
+      = link_to "New Post",
+                new_post_path(cliq_id: @cliq.id),
+                class: "btn btn-primary btn-sm",
+                data: { turbo_frame: "_top", turbo_action: "advance" }
+      = link_to "New Sub-Cliq",
+                new_cliq_path(parent_cliq_id: @cliq.id),
+                class: "btn btn-dark btn-sm",
+                data: { turbo_frame: "_top", turbo_action: "advance" }
+
+  .mt-4
+    = link_to "Moderation",
+              moderation_transparency_path(@cliq),
+              class: "btn btn-outline-secondary btn-sm w-100",
+              data: { turbo_frame: "_top", turbo_action: "advance" }

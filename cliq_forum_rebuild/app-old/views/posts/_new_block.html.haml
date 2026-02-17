@@ -1,0 +1,8 @@
+-# app/views/posts/_new_block.html.haml
+-# Locals: post:, cliq:
+
+.d-flex.align-items-center.justify-content-between.mb-3
+  %h1.h4.mb-0 New Post
+  = render "posts/type_toggle", post_type: (post.post_type || "discussion"), cliq: cliq
+
+= render "posts/form_frame", post: post, cliq: cliq

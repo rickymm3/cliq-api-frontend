@@ -1,0 +1,14 @@
+<%= turbo_stream.remove "no_replies_message" %>
+
+<%= turbo_stream.append "replies_list" do %>
+  <%= render partial: "replies/reply", locals: { reply: @reply, highlight: true } %>
+<% end %>
+
+<% if @reply["parent_reply_id"] %>
+  <%# Ideally we would update the parent reply here, but the API doesn't return the full parent object yet. %>
+  <%# For now, the user gets visual feedback via the new reply appearing and scrolling into view. %>
+<% end %>
+
+<%= turbo_stream.replace "reply_linker_form" do %>
+  <%= render partial: "replies/form", locals: { cliq_id: @cliq_id, post_id: @post_id } %>
+<% end %>

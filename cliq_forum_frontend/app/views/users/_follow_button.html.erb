@@ -1,0 +1,15 @@
+<%# locals: (user:, extra_classes: "") %>
+<% is_following = user["is_following"] || false %>
+<% if logged_in? && !user["is_self"] %>
+  <div data-controller="follow" 
+       data-follow-user-id-value="<%= user["id"] %>"
+       data-follow-following-value="<%= is_following %>"
+       class="<%= extra_classes %>">
+    <button type="button" 
+            data-follow-target="button" 
+            data-action="click->follow#toggle"
+            class="btn w-100 <%= is_following ? 'btn-outline-secondary' : 'btn-primary' %>">
+      <%= is_following ? 'Unfollow' : 'Follow' %>
+    </button>
+  </div>
+<% end %>

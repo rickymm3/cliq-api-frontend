@@ -1,0 +1,12 @@
+- if @reply.parent_reply_id.present?
+  = turbo_stream.append "children_#{@reply.parent_reply_id}" do
+    = render 'replies/reply', reply: @reply
+
+  = turbo_stream.update "reply_form_#{@reply.parent_reply_id}" do
+    = turbo_frame_tag "reply_form_#{@reply.parent_reply_id}"
+- else
+  = turbo_stream.prepend 'replies' do
+    = render 'replies/reply', reply: @reply
+
+  = turbo_stream.update 'new_reply' do
+    = turbo_frame_tag 'new_reply'

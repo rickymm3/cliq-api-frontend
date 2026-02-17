@@ -1,0 +1,53 @@
+= turbo_frame_tag "main_content" do
+  .cliq-layout{ data: { controller: "sidebar-layout" } }
+    %button.cliq-layout__toggle.cliq-layout__toggle--left.btn.btn-light.btn-sm{ type: "button", data: { action: "sidebar-layout#toggleLeft", sidebar_layout_target: "leftToggle" }, aria: { label: "Toggle left sidebar" } }
+    .cliq-layout__overlay{ data: { sidebar_layout_target: "overlay", action: "click->sidebar-layout#closeOverlays" } }
+
+    .cliq-layout__side.cliq-layout__side--left{ data: { sidebar_layout_target: "leftSide" } }
+      .cliq-layout__sidebar
+        = render "shared/primary_sidebar"
+
+    .cliq-layout__content{ data: { sidebar_layout_target: "content" } }
+      .cliq-layout__content-inner
+        .space-y-4
+          .rounded-2xl.bg-white.shadow-sm.border.border-slate-200.p-5
+            .d-flex.flex-column.flex-lg-row.align-items-lg-center.justify-content-lg-between.gap-4
+              .min-w-0
+                %h1.h4.mb-1 Popular
+                %p.text-muted.mb-0 Posts that crossed the heat threshold in the past 24 hours.
+              - if user_signed_in?
+                .btn-group.btn-group-sm
+                  = link_to "All hot posts",
+                            popular_posts_path,
+                            class: ["btn", (@popular_scope == :global ? "btn-dark" : "btn-outline-dark")],
+                            data: { turbo_frame: "_top", turbo_action: "advance" }
+                  = link_to "My hot cliqs",
+                            popular_posts_path(scope: :subscribed),
+                            class: ["btn", (@popular_scope == :subscribed ? "btn-dark" : "btn-outline-dark")],
+                            data: { turbo_frame: "_top", turbo_action: "advance" }
+              = link_to subscribed_path,
+                        class: "btn btn-outline-dark btn-sm d-none d-lg-inline-flex align-items-center gap-2",
+                        data: { turbo_frame: "_top", turbo_action: "advance" } do
+                %i.bi.bi-house-door-fill
+                Back home
+
+          - if @posts.any?
+            = render partial: "posts/post", collection: @posts, as: :post
+          - else
+            .alert.alert-light.border
+              - if @popular_scope == :subscribed && user_signed_in?
+                None of your subscribed cliqs are hot right now. Check back soon!
+              - else
+                Nothing is hot just yet. Check back soon!
+
+          = render "cliqs/pager",
+                   pagy: @pagy,
+                   url: popular_posts_path({ page: @pagy&.next, scope: (@popular_scope == :subscribed ? :subscribed : nil) }.compact)
+
+    .cliq-layout__side.cliq-layout__side--right.d-none.d-xl-block{ data: { sidebar_layout_target: "rightSide" } }
+      .cliq-layout__sidebar
+        = render "shared/heat_rules"
+
+    %button.cliq-layout__mobile-toggle.btn.btn-primary.btn-sm.d-none{ type: "button", data: { action: "sidebar-layout#toggleMobile", sidebar_layout_target: "mobileToggle" }, aria: { label: "Toggle side panels" } }
+      %i.bi.bi-layout-sidebar-inset
+      %span.ms-2 Panels

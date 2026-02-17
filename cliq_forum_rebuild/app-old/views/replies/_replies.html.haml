@@ -1,0 +1,6 @@
+= turbo_frame_tag "replies" do
+  - if replies.present?
+    - replies.each do |reply|
+      = render "replies/reply", reply: reply
+  - else
+    .text-muted.small No replies yet.

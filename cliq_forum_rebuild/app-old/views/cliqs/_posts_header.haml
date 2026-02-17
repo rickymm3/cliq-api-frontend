@@ -1,0 +1,4 @@
+.new-cliq 
+  = turbo_frame_tag "new-cliq" do
+    - if @cliq.can_add_child?
+      = link_to "New Cliq", new_cliq_path(parent_cliq_id: @cliq.id), data: { turbo_frame: "new-cliq" }

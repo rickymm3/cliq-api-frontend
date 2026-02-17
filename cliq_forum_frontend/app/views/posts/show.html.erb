@@ -1,0 +1,111 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-lg-10 mx-auto" data-controller="reply-linker">
+      <% 
+         current_user_id = current_user ? (current_user[:id] || current_user["id"]).to_i : nil
+         post_user_id = @post["user"]["id"].to_i
+         is_mine = current_user_id == post_user_id
+         
+         mine_style = is_mine ? "border-left: 5px solid #0d6efd !important;" : ""
+      %>
+      <div class="card border-0 shadow-sm mb-4" style="<%= mine_style %>">
+        <div class="card-body">
+          <!-- Breadcrumb -->
+          <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+              <li class="breadcrumb-item"><%= link_to "Home", root_path %></li>
+              <li class="breadcrumb-item"><%= link_to @cliq["name"], cliq_path(@cliq["id"].to_i) %></li>
+              <li class="breadcrumb-item active" aria-current="page"><%= @post["title"] %></li>
+            </ol>
+          </nav>
+
+          <!-- Post Header -->
+          <div class="mb-4">
+            <div class="d-flex gap-2 mb-3">
+              <% if @post["post_type"] == "article" %>
+                <span class="badge bg-info">Article</span>
+              <% elsif @post["post_type"] == "question" %>
+                <span class="badge bg-warning">Question</span>
+              <% else %>
+                <span class="badge bg-secondary">Discussion</span>
+              <% end %>
+            </div>
+
+            <h1 class="display-6"><%= @post["title"] %></h1>
+
+            <div class="text-muted mt-3">
+              <small>
+                by <strong><%= link_to @post["user"]["email"], user_profile_path(@post["user"]["id"]), class: "text-decoration-none text-dark fw-semibold" %></strong>
+                &bullet;
+                <%= time_ago_in_words(Time.parse(@post["created_at"])) %> ago
+              </small>
+            </div>
+          </div>
+
+          <!-- Post Content -->
+          <hr>
+          <div class="post-content trix-content">
+            <%= auto_embed_content(clean_action_text_content(@post["content"])) %>
+          </div>
+          <hr>
+
+          <!-- Post Footer -->
+          <div class="d-flex justify-content-between align-items-center mt-4">
+            <div>
+              <button class="btn btn-primary fw-bold" data-action="click->reply-linker#setTarget">
+                <i class="bi bi-reply-fill me-2"></i> Reply
+              </button>
+            </div>
+            
+            <div class="text-muted small">
+              <% if @post["user"]["id"] == current_user&.dig("id") %>
+                <%= link_to "Edit", edit_cliq_post_path(@cliq["id"].to_i, @post["id"].to_i), class: "btn btn-sm btn-outline-secondary" %>
+                <%= link_to "Delete", cliq_post_path(@cliq["id"].to_i, @post["id"].to_i), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-sm btn-outline-danger" %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reply Section -->
+      <div class="mt-4" id="replies-section">
+        <h5 class="mb-3">Replies (<%= @replies.count %>)</h5>
+        
+        <!-- List Replies -->
+        <div id="replies_list" class="mb-4">
+          <% if @replies.any? %>
+            <%= render partial: "replies/reply", collection: @replies, as: :reply %>
+          <% else %>
+            <div id="no_replies_message" class="alert alert-light text-center py-4 text-muted border-0 bg-light-subtle rounded-3 mb-4">
+              No replies yet. Be the first to join the conversation!
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Bottom "Reply" Button for Main Topic -->
+        <div class="mb-4 d-grid">
+           <button class="btn btn-outline-primary py-3 fw-bold" 
+                   data-action="click->reply-linker#setTarget">
+             <i class="bi bi-reply-fill me-2"></i> Reply to Topic
+           </button>
+        </div>
+
+        <!-- Reply Form -->
+        <%= render "replies/form" %>
+      </div>
+    </div>
+
+    <!-- Sidebar Removed -->
+  </div>
+</div>
+
+<style>
+  .post-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+  }
+
+  .post-content p {
+    margin-bottom: 1.25rem;
+  }
+</style>

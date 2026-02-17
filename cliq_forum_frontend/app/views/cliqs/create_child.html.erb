@@ -1,0 +1,55 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-lg-10 mx-auto">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h1 class="mb-4">Create New Sub-Cliq</h1>
+          <p class="text-muted mb-4">
+            Under: <strong><%= @parent_cliq["name"] %></strong>
+          </p>
+
+          <% if @errors.present? %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <strong>Error:</strong>
+              <ul class="mb-0">
+                <% @errors.each do |error| %>
+                  <li><%= error %></li>
+                <% end %>
+              </ul>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% end %>
+
+          <%= form_with(local: true, url: create_child_cliq_path(@parent_cliq["id"].to_i), method: :post) do |form| %>
+            <!-- Section 1: Cliq Details -->
+            <div class="mb-5">
+              <div class="bg-light p-3 rounded mb-3">
+                <h5 class="fw-bold mb-0">📁 Cliq Details</h5>
+              </div>
+              <%= render "form", form: form %>
+            </div>
+
+            <hr>
+
+            <!-- Section 2: First Post -->
+            <div class="mb-5">
+              <div class="bg-light p-3 rounded mb-3">
+                <h5 class="fw-bold mb-0">📝 First Post (Kickstart the discussion)</h5>
+              </div>
+              <%= fields_for :post do |post_form| %>
+                <%= render "posts/fields", form: post_form %>
+              <% end %>
+            </div>
+
+            <div class="d-flex gap-2">
+              <%= form.submit "Create Cliq & Post", class: "btn btn-primary btn-lg" %>
+              <%= link_to "Cancel", cliq_path(@parent_cliq["id"].to_i), class: "btn btn-secondary btn-lg" %>
+            </div>
+
+            <%= render "shared/trix_styles" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,36 @@
+<div class="card border-0 shadow position-fixed bottom-0 end-0 z-3 rounded-0 reply-bar" data-reply-linker-target="container" id="reply_linker_form" style="display: none;">
+  <div class="card-body bg-white border-top">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="card-title h6 m-0 text-muted text-uppercase fw-bold">Leave a Reply</h5>
+      <button type="button" class="btn-close" aria-label="Close" data-action="click->reply-linker#clearTarget"></button>
+    </div>
+    
+    <% 
+       # Handle inputs from both show view (@objects) and turbo stream (locals)
+       c_id = local_assigns[:cliq_id] || @cliq["id"]
+       p_id = local_assigns[:post_id] || @post["id"]
+    %>
+    
+    <%= form_with(scope: :reply, url: cliq_post_replies_path(c_id, p_id), method: :post, local: true) do |f| %>
+      <%= f.hidden_field :parent_reply_id, data: { reply_linker_target: "input" } %>
+
+      <!-- Reply Context Banner -->
+      <div data-reply-linker-target="banner" class="alert alert-light border d-flex justify-content-between align-items-center py-2 px-3 mb-3 d-none">
+        <div class="d-flex align-items-center text-muted small">
+          <span class="me-2">↩</span>
+          <span data-reply-linker-target="label" class="fw-bold">Replying to...</span>
+        </div>
+        <button type="button" class="btn-close small" aria-label="Cancel context" data-action="click->reply-linker#clearTarget"></button>
+      </div>
+
+      <div class="mb-3" data-reply-linker-target="editor">
+        <%= render "shared/rich_text_editor", form: f, field: :content, placeholder: "Write your reply...", id: "reply_content_trix" %>
+      </div>
+      
+      <div class="d-flex justify-content-end">
+        <%= f.submit "Post Reply", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,142 @@
+<% 
+   current_user_id = current_user ? (current_user[:id] || current_user["id"]).to_i : nil
+   post_user_id = post["user"]["id"].to_i
+   is_mine = current_user_id == post_user_id
+   mine_style = is_mine ? "border-left: 5px solid #0d6efd !important;" : ""
+%>
+<div class="card border-0 shadow-sm mb-3 hover-shadow-sm" style="transition: transform 0.2s, box-shadow 0.2s; <%= mine_style %>">
+  <% if post["feed_context"] && post["feed_context"]["type"] == "signal" && post["feed_context"]["signaler"] %>
+    <div class="card-header bg-transparent border-0 pb-0 pt-2 ps-3">
+      <small class="text-secondary fst-italic">
+        <i class="bi bi-pin-angle-fill me-1 text-success"></i> 
+        Signaled by <strong><%= link_to post["feed_context"]["signaler"]["email"].split('@').first, user_profile_path(post["feed_context"]["signaler"]["id"]), class: "text-decoration-none text-dark" %></strong>
+      </small>
+    </div>
+  <% end %>
+  <div class="card-body">
+    <!-- Header: Hierarchy & Meta -->
+    <div class="d-flex align-items-center flex-wrap mb-2 small text-muted">
+      
+      <!-- Cliq Path -->
+      <div class="d-flex align-items-center me-3">
+        <% if post["cliq"]["parent"].present? %>
+          <%= link_to post["cliq"]["parent"]["name"], cliq_path(post["cliq"]["parent"]["id"]), class: "fw-bold text-secondary text-decoration-none hover-dark", data: { turbo_frame: "_top" } %>
+          <span class="mx-1">/</span>
+        <% end %>
+        <%= link_to post["cliq"]["name"], cliq_path(post["cliq"]["id"]), class: "fw-bold text-dark text-decoration-none hover-primary", data: { turbo_frame: "_top" } %>
+      </div>
+
+      <span class="d-none d-sm-inline mx-1">•</span>
+
+      <!-- User & Timestamp -->
+      <div>
+        <span class="me-1">Posted by</span>
+        <%= link_to post["user"]["email"].split('@').first, user_profile_path(post["user"]["id"]), class: "text-decoration-none text-muted fw-semibold hover-dark", data: { turbo_frame: "_top" } %>
+        <span class="mx-1">•</span>
+        <span title="<%= post["created_at"] %>"><%= time_ago_in_words(Time.parse(post["created_at"])) %> ago</span>
+      </div>
+    </div>
+
+    <!-- Title Area -->
+    <div class="mb-2">
+      <h5 class="card-title fw-bold mb-1">
+        <%= link_to post["title"], cliq_post_path(post["cliq"]["id"], post["id"]), class: "text-decoration-none text-dark stretched-link-exception", data: { turbo_frame: "_top" } %>
+      </h5>
+      
+      <!-- Video Embed Preview (List View) -->
+      <% video_embed = extract_first_video_url(post["content"]) %>
+      <% if video_embed %>
+         <div class="mt-2 text-decoration-none stretched-link-exception" style="position: relative; z-index: 2;">
+            <%= render_video_embed(video_embed) %>
+         </div>
+      <% end %>
+
+      <!-- Post Type Badge -->
+      <div class="mt-2">
+        <% 
+          # Handle both integer (API legacy) and string (API enum) values
+          type_map = { "0" => "discussion", "1" => "question", "2" => "article" }
+          # If it matches a key in the map, use the value; otherwise assume it's already the string (e.g. "question")
+          normalized_type = type_map[post["post_type"].to_s] || post["post_type"].to_s
+          normalized_type = "discussion" if normalized_type.blank?
+          
+          badge_class = case normalized_type
+            when "article" then "info"
+            when "question" then "warning"
+            else "secondary"
+          end 
+        %>
+        <span class="badge bg-<%= badge_class %> bg-opacity-10 text-dark border border-<%= badge_class %> border-opacity-25 rounded-pill fw-normal">
+          <%= normalized_type.capitalize %>
+        </span>
+      </div>
+    </div>
+
+    <!-- Content Preview -->
+    <div class="mb-3">
+      <p class="card-text text-muted mb-0" 
+         data-controller="html-preview"
+         data-html-preview-html-value="<%= post["content"] %>"
+         data-html-preview-length-value="280"
+         style="min-height: 1.5em;">
+      </p>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="d-flex align-items-center border-top pt-3 mt-3">
+      
+      <!-- Like/Dislike Buttons -->
+      <div class="btn-group me-3" role="group">
+        <button class="btn btn-sm btn-light text-secondary border-0 post-like-btn" 
+                data-post-id="<%= post["id"] %>" 
+                data-interaction="<%= post["user_interaction"] %>"
+                title="Like">
+           <span class="<%= post["user_interaction"] == "like" ? "text-danger" : "" %> fw-bold">
+             <%= post["user_interaction"] == "like" ? "❤️" : "🤍" %>
+             <span class="d-none d-md-inline ms-1">Like</span>
+           </span>
+        </button>
+        <button class="btn btn-sm btn-light text-secondary border-0 post-dislike-btn" 
+                data-post-id="<%= post["id"] %>" 
+                data-interaction="<%= post["user_interaction"] %>"
+                title="Dislike">
+           <span class="<%= post["user_interaction"] == "dislike" ? "text-primary" : "" %>">
+              👎 
+           </span>
+        </button>
+      </div>
+
+      <!-- Heat Score -->
+      <div class="btn btn-sm btn-light text-secondary border-0 d-flex align-items-center me-2" title="Heat Score">
+        <span class="me-1">🔥</span>
+        <span class="fw-bold"><%= number_with_precision(post["heat_score"].to_f, precision: 1) %></span>
+      </div>
+
+      <!-- Comments Link -->
+      <%= link_to cliq_post_path(post["cliq"]["id"], post["id"]), class: "btn btn-sm btn-light text-secondary border-0 d-flex align-items-center me-auto", data: { turbo_frame: "_top" } do %>
+        <span class="me-2">💬</span>
+        <span class="fw-bold"><%= post["replies_count"] || 0 %></span>
+        <span class="d-none d-md-inline ms-1">Comments</span>
+      <% end %>
+
+      <!-- Share and Signal -->
+      <div class="d-flex text-muted gap-2">
+         <% if logged_in? %>
+           <button class="btn btn-sm btn-light text-secondary border-0 post-signal-btn" 
+                   data-post-id="<%= post["id"] %>"
+                   data-signaled="<%= post["is_signaled"] %>"
+                   title="Signal / Pin this post for your followers">
+             <span class="<%= post["is_signaled"] ? "text-success" : "" %> fw-bold signal-icon-wrapper">
+               <i class="bi <%= post["is_signaled"] ? "bi-pin-angle-fill" : "bi-pin-angle" %>"></i>
+               <span class="d-none d-md-inline ms-1"><%= post["is_signaled"] ? "Signaled" : "Signal" %></span>
+             </span>
+           </button>
+         <% end %>
+         <button class="btn btn-sm btn-light text-secondary border-0">
+           ↪ <span class="d-none d-md-inline">Share</span>
+         </button>
+      </div>
+    </div>
+
+  </div>
+</div>

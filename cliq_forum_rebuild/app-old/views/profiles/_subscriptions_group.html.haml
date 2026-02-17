@@ -1,0 +1,17 @@
+-# locals: parent:, cliqs:
+-# This block renders a single parent heading + its child rows,
+-# wrapped with a stable id so we can replace/remove it via Turbo Stream.
+- group_dom_id = dom_id(parent, :subs_group)
+
+%div{ id: group_dom_id }
+  .mb-4
+    .text-sm.font-medium.mb-1
+      = link_to parent.name,
+        cliq_path(parent),
+        data: { turbo_frame: "_top", turbo_action: "advance" }
+
+    .rounded-lg.border.border-gray-200.divide-y
+      - cliqs.sort_by(&:name).each do |cliq|
+        - subscription = current_user.subscriptions.find_by(cliq_id: cliq.id)
+        - next unless subscription
+        = render "subscriptions/row", subscription: subscription

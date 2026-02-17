@@ -1,0 +1,10 @@
+= turbo_frame_tag 'profile_content' do
+  = render 'profiles/header', profile: @profile, owner: @owner_viewing
+  = render 'profiles/nav', profile: @profile, owner: @owner_viewing, current_section: @section
+
+  .profile-section
+    - if @replies.present?
+      = render 'profiles/replies_list'
+      = render 'cliqs/pager', pagy: @pagy, url: @next_page_url
+    - else
+      %p.text-muted.mb-0 No replies yet.

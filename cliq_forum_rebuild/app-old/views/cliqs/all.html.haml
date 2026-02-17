@@ -1,0 +1,6 @@
+=turbo_frame_tag "main_content" do
+
+  %h1 Main Categories
+
+  - @main_categories.each do |cliq|
+    = render partial: 'allcliq', locals: { cliq: cliq }

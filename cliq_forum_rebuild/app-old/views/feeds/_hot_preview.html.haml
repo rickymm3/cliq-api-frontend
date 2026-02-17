@@ -1,0 +1,24 @@
+- posts = Array.wrap(hot_posts).compact
+.card.rounded-2xl.shadow-sm.border.border-slate-200
+  .card-body
+    %h2.h6.mb-2 Hot right now
+    %p.text-muted.small.mb-3 Posts that crossed the heat threshold in the past 24 hours.
+
+    - if posts.any?
+      %ul.list-unstyled.mb-0.d-flex.flex-column.gap-2
+        - posts.each do |post|
+          - path = post_id_slug_post_path(post_id: post.id, slug: post.slug)
+          %li
+            = link_to path,
+                      class: "d-flex align-items-start gap-3 text-decoration-none text-dark",
+                      data: { turbo_frame: "_top", turbo_action: "advance" } do
+              %span.badge.rounded-pill.text-bg-danger.flex-shrink-0.mt-1 Hot
+              .min-w-0
+                %span.d-block.fw-semibold.text-truncate= post.title
+                %span.d-block.text-muted.small.text-truncate
+                  = post.cliq&.name
+                  ·
+                  = time_ago_in_words(post.updated_at)
+                  ago
+    - else
+      .alert.alert-light.border.mb-0 Nothing is trending yet.

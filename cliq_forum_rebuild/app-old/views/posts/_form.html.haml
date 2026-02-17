@@ -1,0 +1,100 @@
+-# app/views/posts/_form.html.haml
+
+- if post.errors.any?
+  .alert.alert-danger.mb-3
+    = post.errors.full_messages.uniq.to_sentence
+
+= form_with model: post,
+            local: true,
+            html: { multipart: true },
+            data: { turbo_frame: "_top" },
+            class: "mb-3 post-form" do |form|
+  .mb-3
+    = form.label :title, class: "form-label"
+    = form.text_field :title, class: "form-control", placeholder: "Enter the title of your post"
+
+  .mb-3
+    = form.label :content, class: "form-label"
+    = form.rich_text_area :content, class: "form-control content-textarea", placeholder: "Write your post here..."
+
+  = form.hidden_field :post_type, value: (post.post_type || :discussion)
+
+  - if defined?(cliq) && cliq
+    = form.hidden_field :cliq_id, value: cliq.id
+    .mb-2.small.text-muted
+      Posting to:
+      %strong= cliq.name
+
+  - if post.article?
+    .mb-3
+      = form.label :article_header_image, "Header image", class: "form-label"
+      = form.file_field :article_header_image,
+                        accept: "image/png,image/jpeg,image/jpg,image/webp,image/gif",
+                        direct_upload: true,
+                        class: "form-control"
+      %small.form-text.text-muted
+        Appears at the top of the article.
+      - if post.persisted? && post.article_header_image.attached?
+        - header_preview = safe_variant(post.article_header_image, resize_to_fill: [320, 180])
+        .mt-2
+          = image_tag header_preview, class: "img-fluid rounded border"
+          %small.text-muted.d-block.mt-1 Current header image
+
+    .mb-3
+      = form.label :article_inline_image_one, "Inline image #1", class: "form-label"
+      = form.file_field :article_inline_image_one,
+                        accept: "image/png,image/jpeg,image/jpg,image/webp,image/gif",
+                        direct_upload: true,
+                        class: "form-control"
+      %small.form-text.text-muted
+        Displays near the beginning of the article body.
+      - if post.persisted? && post.article_inline_image_one.attached?
+        - inline_one_preview = safe_variant(post.article_inline_image_one, resize_to_fill: [240, 160])
+        .mt-2
+          = image_tag inline_one_preview, class: "img-fluid rounded border"
+          %small.text-muted.d-block.mt-1 Current inline image #1
+
+    .mb-3
+      = form.label :article_inline_image_two, "Inline image #2", class: "form-label"
+      = form.file_field :article_inline_image_two,
+                        accept: "image/png,image/jpeg,image/jpg,image/webp,image/gif",
+                        direct_upload: true,
+                        class: "form-control"
+      %small.form-text.text-muted
+        Displays near the end of the article body.
+      - if post.persisted? && post.article_inline_image_two.attached?
+        - inline_two_preview = safe_variant(post.article_inline_image_two, resize_to_fill: [240, 160])
+        .mt-2
+          = image_tag inline_two_preview, class: "img-fluid rounded border"
+          %small.text-muted.d-block.mt-1 Current inline image #2
+
+  - else
+    .mb-3
+      = form.label :lead_image, "Post image", class: "form-label"
+      = form.file_field :lead_image,
+                        accept: "image/png,image/jpeg,image/jpg,image/webp,image/gif",
+                        direct_upload: true,
+                        class: "form-control"
+      %small.form-text.text-muted
+        Shown as a thumbnail in post listings.
+      - if post.persisted? && post.lead_image.attached?
+        - lead_preview = safe_variant(post.lead_image, resize_to_fill: [240, 160])
+        .mt-2
+          = image_tag lead_preview, class: "img-fluid rounded border"
+          %small.text-muted.d-block.mt-1 Current post image
+
+  - can_candidate = current_user&.established_for_moderation?
+  - visibility_options = [["Public post", "public"]]
+  - visibility_options << ["Moderator candidacy (hidden from feeds)", "moderation"] if can_candidate || post.visibility == "moderation"
+  .mb-3
+    = form.label :visibility, "Post visibility", class: "form-label"
+    = form.select :visibility,
+                  options_for_select(visibility_options, post.visibility || "public"),
+                  {},
+                  class: "form-select"
+    - unless can_candidate
+      %small.form-text.text-muted
+        Only established accounts may publish moderator candidacy posts.
+
+  .d-grid.gap-2.mt-4
+    = form.submit 'Submit', class: "btn btn-primary btn-lg"

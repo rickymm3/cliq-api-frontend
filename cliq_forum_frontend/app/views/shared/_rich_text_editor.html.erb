@@ -1,0 +1,15 @@
+<%# locals: (form:, field:, placeholder: "Write here...", id: nil) %>
+<% id ||= "#{form.object_name}_#{field}_trix" %>
+<% direct_upload_url = "http://localhost:3000/rails/active_storage/direct_uploads" %>
+
+<div class="trix-wrapper border rounded-3 bg-white shadow-sm"
+     data-controller="rich-editor"
+     data-rich-editor-direct-upload-url-value="<%= direct_upload_url %>">
+  <%= form.hidden_field field, id: id %>
+  <trix-editor input="<%= id %>" 
+               class="trix-content trix-editor-custom p-3"
+               style="min-height: 200px;"
+               placeholder="<%= placeholder %>"></trix-editor>
+</div>
+
+<%= render "shared/trix_styles" %>

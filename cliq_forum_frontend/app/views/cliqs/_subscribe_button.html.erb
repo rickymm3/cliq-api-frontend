@@ -1,0 +1,22 @@
+<% frame_id = "subscribe-button-#{cliq_id}" %>
+<%= turbo_frame_tag(frame_id) do %>
+  <% if logged_in? %>
+    <% if is_subscribed %>
+      <%= form_with url: unsubscribe_cliq_path(cliq_id), method: :delete, local: true, data: { turbo_frame: frame_id, turbo_action: "replace" } do |f| %>
+        <button type="submit" class="btn btn-success btn-sm ms-3 subscribe-btn">
+          <i class="bi bi-check-lg me-2"></i><span class="btn-text">Subscribed</span>
+        </button>
+      <% end %>
+    <% else %>
+      <%= form_with url: subscribe_cliq_path(cliq_id), method: :post, local: true, data: { turbo_frame: frame_id, turbo_action: "replace" } do |f| %>
+        <button type="submit" class="btn btn-outline-success btn-sm ms-3 subscribe-btn">
+          <i class="bi bi-plus-lg me-2"></i><span class="btn-text">Subscribe</span>
+        </button>
+      <% end %>
+    <% end %>
+  <% else %>
+    <%= link_to login_path, class: "btn btn-outline-success btn-sm ms-3 subscribe-btn" do %>
+      <i class="bi bi-plus-lg me-2"></i><span class="btn-text">Subscribe</span>
+    <% end %>
+  <% end %>
+<% end %>

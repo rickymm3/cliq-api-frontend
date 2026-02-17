@@ -1,0 +1,66 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+  <div class="container-fluid">
+    <%= link_to "Cliq", root_path, class: "navbar-brand" %>
+    
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <form action="<%= search_path %>" method="get" class="d-flex me-auto mx-4">
+        <div class="input-group" style="width: 300px;">
+          <%= text_field_tag :q, "", placeholder: "Search cliqs...", class: "form-control form-control-sm", id: "navbar-search" %>
+          <button class="btn btn-sm btn-outline-light" type="submit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.003-.003.009-.01.01-.01l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.01-.01zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+
+      <ul class="navbar-nav ms-auto">
+        <% if logged_in? %>
+          <li class="nav-item">
+            <%= link_to "📰 Feed", feed_path, class: "nav-link" %>
+          </li>
+          
+          <li class="nav-item dropdown">
+            <%# We remove data-bs-toggle and let Stimulus handle the toggle event %>
+            <button class="nav-link dropdown-toggle" 
+                    id="userDropdown" 
+                    type="button"
+                    data-controller="dropdown"
+                    data-action="click->dropdown#toggle"
+                    data-bs-config='{"popperConfig": {"strategy": "fixed"}}'
+                    aria-expanded="false">
+              👤 <%= current_user[:email] %>
+            </button>
+
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li>
+                <%= link_to "Dashboard", dashboard_path, class: "dropdown-item" %>
+              </li>
+              <li>
+                <%= link_to "View Profile", user_profile_path(current_user[:id]), class: "dropdown-item" %>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <%= button_to "Log Out", logout_path, 
+                    method: :delete, 
+                    form_class: "d-inline", 
+                    class: "dropdown-item" %>
+              </li>
+            </ul>
+          </li>
+        <% else %>
+          <li class="nav-item">
+            <%= link_to "Sign Up", signup_path, class: "nav-link" %>
+          </li>
+          <li class="nav-item">
+            <%= link_to "Log In", login_path, class: "nav-link" %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+</nav>

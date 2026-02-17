@@ -1,0 +1,10 @@
+= form_with(model: cliq, local: true) do |form|
+  .field
+    = form.label :name
+    = form.text_field :name
+  .field
+    = form.label :description
+    = form.text_area :description
+  = form.hidden_field :parent_cliq_id, value: params[:parent_cliq_id] if params[:parent_cliq_id]
+  .actions
+    = form.submit
