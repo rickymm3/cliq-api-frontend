@@ -1,9 +1,0 @@
-/ Append just-fetched posts under the existing list
-= turbo_stream.append "posts" do
-  = render partial: "posts/post", collection: @posts, as: :post
-
-/ Swap the pager (either next page link or “no more posts”)
-= turbo_stream.replace "pager" do
-  = render "cliqs/pager",
-           pagy: @pagy,
-           url: subscribed_path(page: @pagy.next)

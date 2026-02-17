@@ -1,9 +1,0 @@
-= turbo_frame_tag "direct-message-conversation" do
-  - if conversation
-    - composed_message = message || DirectMessage.new
-    = render partial: "direct_messages/conversation",
-             locals: { conversation: conversation, message: composed_message }
-  - else
-    .direct-messages__empty
-      %h2.h5.mb-2 No conversations yet
-      %p.text-muted Start a conversation from a profile or search for a username.

@@ -1,4 +1,0 @@
-- frame_id = params[:frame_id].presence || "new_reply"
-= turbo_frame_tag frame_id do
-  - unless params[:cancel].present?
-    = render 'form'

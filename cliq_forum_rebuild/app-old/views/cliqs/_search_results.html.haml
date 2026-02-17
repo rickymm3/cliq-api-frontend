@@ -1,8 +1,0 @@
-.dropdown-menu.show.cliq-dropdown-menu
-  .cliq-results
-    - if @cliqs.any?
-      - @cliqs.each do |cliq|
-        = link_to cliq.name, cliq_path(cliq), class: "dropdown-item cliq-result", data: { action: "click->search#clearFormAndHideDropdown", turbo_frame: "main_content", turbo_action: "advance" }
-    - else
-      No Results
-

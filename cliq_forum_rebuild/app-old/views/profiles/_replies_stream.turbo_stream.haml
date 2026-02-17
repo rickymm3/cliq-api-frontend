@@ -1,5 +1,0 @@
-= turbo_stream.append "replies" do
-  = render partial: "replies/reply_profile", collection: @replies, as: :reply
-
-= turbo_stream.replace "pager" do
-  = render "cliqs/pager", pagy: @pagy, url: @next_page_url

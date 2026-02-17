@@ -1,7 +1,0 @@
-= turbo_frame_tag 'main_content' do
-  %h1 Editing post
-
-  = render partial: "form", locals: { post: @post, cliq: @cliq }
-  = link_to 'Show', @post
-  \|
-  = link_to 'Cancel', posts_path

@@ -1,5 +1,0 @@
-= turbo_frame_tag "replies" do
-  - if @replies.present?
-    = render partial: "replies/reply_profile", collection: @replies, as: :reply
-  - else
-    %p.text-muted.mb-0 No replies yet.

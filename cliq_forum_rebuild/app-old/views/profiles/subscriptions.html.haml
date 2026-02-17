@@ -1,9 +1,0 @@
-= turbo_frame_tag 'profile_content' do
-  = render 'profiles/header', profile: @profile, owner: @owner_viewing
-  = render 'profiles/nav', profile: @profile, owner: @owner_viewing, current_section: @section
-
-  .profile-section
-    = render 'profiles/subscriptions', user: @user
-
-  .mt-4
-    = link_to 'Users I Follow', followed_users_path, class: 'btn btn-sm btn-outline-secondary', data: { turbo_frame: 'profile_content', turbo_action: 'advance' }

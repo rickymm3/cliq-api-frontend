@@ -1,6 +1,0 @@
-%main.container
-  = link_to sanitize("&larr; Back to cliq"), cliq_path(@cliq)
-  .header
-    %h1 Edit Cliq
-  = turbo_frame_tag @cliq do
-    = render "form", cliq: @cliq

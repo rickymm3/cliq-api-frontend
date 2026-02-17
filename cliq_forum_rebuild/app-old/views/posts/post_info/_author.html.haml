@@ -1,7 +1,0 @@
-%span.post-author
-  - if post.user
-    = link_to(post.user.profile.username,
-              profile_path(post.user.profile),
-              class: "text-decoration-none",
-              data: { turbo_frame: "_top", turbo_action: "advance" })
-%span.post-date.ms-1.text-muted= time_ago_in_words(post.created_at) + " ago"
