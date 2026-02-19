@@ -30,13 +30,24 @@ Rails.application.routes.draw do
   get "my-profile", to: "profiles#dashboard", as: :dashboard
 
   resources :cliqs, only: [:show] do
+    collection do
+      get :search
+    end
     resources :posts, only: [:show, :new, :create] do
       resources :replies, only: [:create, :edit, :update, :destroy]
     end
     get :children, on: :member
     get :create_child, on: :member
     post :create_child, on: :member, action: :create_child_post
+    get :merge_proposal, on: :member, action: :create_merge_proposal
+    post :merge_proposal, on: :member, action: :submit_merge_proposal
     post :subscribe, on: :member
     delete :unsubscribe, on: :member
+  end
+
+  resources :merge_proposals, only: [] do
+    member do
+      post :vote
+    end
   end
 end

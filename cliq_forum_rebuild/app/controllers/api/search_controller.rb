@@ -43,13 +43,18 @@ module Api
       
       # Search posts if requested
       if search_type == "all" || search_type == "posts"
+        # We need to join ActionText rich text table for content search
         post_results = Post
-          .where("LOWER(title) LIKE LOWER(?) OR LOWER(content) LIKE LOWER(?)", search_term, search_term)
+          .joins("LEFT JOIN action_text_rich_texts ON action_text_rich_texts.record_id = posts.id AND action_text_rich_texts.record_type = 'Post' AND action_text_rich_texts.name = 'content'")
+          .where("LOWER(title) LIKE LOWER(?) OR LOWER(action_text_rich_texts.body) LIKE LOWER(?)", search_term, search_term)
           .where.not(visibility: 1)  # Filter out moderation posts
           .order(created_at: :desc)
           .includes(:user, :cliq)
+          .distinct
         
-        post_total = post_results.count
+        post_total = post_results.count 
+        # Note: count on distinct with includes might be tricky in older rails, but 8.0 should handle it or we use .size
+        
         paginated_posts = post_results
           .offset((page - 1) * per_page)
           .limit(per_page)
@@ -75,6 +80,7 @@ module Api
         id: cliq.id,
         name: cliq.name,
         description: cliq.description,
+        hierarchy: cliq.hierarchy_string,
         parent_cliq_id: cliq.parent_cliq_id,
         rank: cliq.rank,
         slug: cliq.slug,
@@ -100,6 +106,7 @@ module Api
         cliq: {
           id: post.cliq.id,
           name: post.cliq.name,
+          hierarchy: post.cliq.hierarchy_string,
           parent_cliq_id: post.cliq.parent_cliq_id,
           parent_cliq: parent_cliq ? {
             id: parent_cliq.id,

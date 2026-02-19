@@ -1,5 +1,8 @@
 class CliqsController < ApplicationController
   include ApiClient
+  
+  # Skip potentially expensive sidebar data fetch for lightweight actions
+  skip_before_action :set_sidebar_data, only: [:search]
 
   def show
     cliq_response = api_get("cliqs/#{params[:id]}")
@@ -149,5 +152,56 @@ class CliqsController < ApplicationController
     render partial: "cliqs/subscribe_button", locals: { cliq_id: cliq_id, is_subscribed: @is_subscribed }
   end
 
+  def search
+    # GET /cliqs/search?q=query (Proxy to API)
+    query = params[:q].to_s.strip
+    per_page = (params[:per_page] || 20).to_i
+    
+    if query.blank?
+      render json: { data: [] }
+      return
+    end
+    
+    # Forward the search request to API
+    api_response = api_get("cliqs/search", { q: query, per_page: per_page })
+    
+    render json: api_response || { data: [] }
+  end
+
+  def create_merge_proposal
+    # GET request - show the form to suggest a merge
+    cliq_response = api_get("cliqs/#{params[:id]}")
+    @cliq = cliq_response["data"] if cliq_response
+    
+    if @cliq.nil?
+      redirect_to root_path, alert: "Category not found"
+      return
+    end
+
+    if !logged_in?
+      redirect_to login_path, alert: "You must be logged in to propose a merge"
+      return
+    end
+  end
+
+  def submit_merge_proposal
+    # POST request - submit the proposal
+    cliq_id = params[:id]
+    
+    proposal_params = {
+      target_cliq_id: params[:proposal][:target_cliq_id],
+      reason: params[:proposal][:reason]
+    }
+    
+    response = api_post("cliqs/#{cliq_id}/merge_proposals", { proposal: proposal_params })
+    
+    if response && response["data"]
+      redirect_to cliq_path(cliq_id), notice: "Merge proposal submitted for community voting!"
+    else
+      @errors = response&.dig("errors") || ["Failed to submit proposal"]
+      @cliq = api_get("cliqs/#{cliq_id}")&.dig("data")
+      render :create_merge_proposal, status: :unprocessable_entity
+    end
+  end
 end
 

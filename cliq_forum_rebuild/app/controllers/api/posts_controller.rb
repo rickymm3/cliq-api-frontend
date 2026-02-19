@@ -9,16 +9,61 @@ module Api
     # GET /api/cliqs/:cliq_id/posts
     def index
       if @cliq
-        # Determine scope: specific cliq or cliq + descendants
+        # Canonical/Alias Logic
+        effective_cliq = @cliq.effective_cliq
+        effective_lens = @cliq.effective_lens
+
+        # Determine target cliq IDs (self + descendants unless excluded)
         if params[:exclude_children] == 'true' || params[:exclude_children] == '1'
-          cliq_ids = [@cliq.id]
+          target_cliq_ids = [effective_cliq.id]
         else
-          cliq_ids = [@cliq.id] + @cliq.descendants.pluck(:id)
+          target_cliq_ids = [effective_cliq.id] + effective_cliq.descendants.pluck(:id)
         end
-        scope = Post.where(cliq_id: cliq_ids)
+        
+        # Base Scope: Posts in the target cliq(s)
+        if params[:exclude_children] == 'true' || params[:exclude_children] == '1'
+          # Just the current cliq - show everything
+          base_scope = Post.where(cliq_id: effective_cliq.id)
+        else
+          # Aggregated view: Current Cliq + Descendants
+          children_ids = target_cliq_ids - [effective_cliq.id]
+          
+          if children_ids.empty?
+             base_scope = Post.where(cliq_id: effective_cliq.id)
+          else
+            # Logic: Show ALL posts from current cliq, match all from children EXCEPT merge proposals
+            posts_table = Post.arel_table
+            
+            # Condition 1: Post is in the current cliq (any kind)
+            in_current = posts_table[:cliq_id].eq(effective_cliq.id)
+            
+            # Condition 2: Post is in children AND NOT a merge proposal
+            # Merge Proposal Kind = 1
+            in_children = posts_table[:cliq_id].in(children_ids)
+            not_proposal = posts_table[:kind].not_eq(1).or(posts_table[:kind].eq(nil)).and(posts_table[:cliq_merge_proposal_id].eq(nil))
+            
+            # Combine: (In Current) OR (In Children AND Not Proposal)
+            base_scope = Post.where(in_current.or(in_children.and(not_proposal)))
+          end
+        end
+
+        if effective_lens.present?
+          # Alias View: Filter by lens
+          # We join post_links to ensure the post is tagged with this lens for this cliq context.
+          # We filter by both lens_id AND the cliq_id to ensure the link is relevant to the effective cliq context.
+          # Note: We use distinct to avoid duplicates if multiple links exist (though unlikely with unique constraint)
+          scope = base_scope.joins(:post_links).where(post_links: { 
+            lens_id: effective_lens,
+            cliq_id: target_cliq_ids
+          }).distinct
+        else
+          # Canonical View: Show all posts in the cliq hierarchy
+          scope = base_scope
+        end
       else
         # Global scope (e.g. for /api/posts?sort=recent)
-        scope = Post.all
+        # Exclude merge proposals from global/home feed as they are context-specific per user request
+        scope = Post.where.not(kind: :merge_proposal)
       end
 
       # Filter out moderation posts (handle logic for moderators)

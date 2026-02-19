@@ -39,6 +39,39 @@
 
     <!-- Title Area -->
     <div class="mb-2">
+      <!-- Merge Proposal Voting UI -->
+      <% if post["kind"] == "merge_proposal" && post["merge_proposal"].present? %>
+        <div class="card mb-3 border-info" data-controller="merge-proposal" data-merge-proposal-id-value="<%= post["merge_proposal"]["id"] %>">
+          <div class="card-header bg-info-subtle text-info-emphasis d-flex justify-content-between align-items-center">
+            <strong>Merge Proposal</strong>
+            <span class="badge bg-secondary" data-merge-proposal-target="status"><%= post["merge_proposal"]["status"].humanize %></span>
+          </div>
+          <div class="card-body">
+            <p class="card-text">
+              Request to merge <strong><%= post["merge_proposal"]["source_cliq"]["name"] %></strong> into <strong><%= post["merge_proposal"]["target_cliq"]["name"] %></strong>.
+            </p>
+            
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-success btn-sm d-flex align-items-center gap-2" data-action="click->merge-proposal#voteYes">
+                <i class="bi bi-check-circle"></i> 
+                Yes <span class="badge text-bg-success" data-merge-proposal-target="yesCount"><%= post["merge_proposal"]["yes_votes"] %></span>
+              </button>
+              
+              <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2" data-action="click->merge-proposal#voteNo">
+                <i class="bi bi-x-circle"></i> 
+                No <span class="badge text-bg-danger" data-merge-proposal-target="noCount"><%= post["merge_proposal"]["no_votes"] %></span>
+              </button>
+            </div>
+            
+            <div class="mt-2 text-muted small">
+              <% if post["merge_proposal"]["phase_1_expires_at"] %>
+                Phase 1 ends: <%= Time.parse(post["merge_proposal"]["phase_1_expires_at"]).strftime("%b %d, %Y") %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
       <h5 class="card-title fw-bold mb-1">
         <%= link_to post["title"], cliq_post_path(post["cliq"]["id"], post["id"]), class: "text-decoration-none text-dark stretched-link-exception", data: { turbo_frame: "_top" } %>
       </h5>

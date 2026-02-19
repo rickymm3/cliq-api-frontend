@@ -62,7 +62,18 @@ module PostSerializable
       },
       cliq: cliq_data,
       created_at: post.created_at,
-      updated_at: post.updated_at
+      updated_at: post.updated_at,
+      kind: post.kind,
+      merge_proposal: post.cliq_merge_proposal.present? ? {
+        id: post.cliq_merge_proposal.id,
+        source_cliq: { id: post.cliq_merge_proposal.source_cliq.id, name: post.cliq_merge_proposal.source_cliq.name },
+        target_cliq: { id: post.cliq_merge_proposal.target_cliq.id, name: post.cliq_merge_proposal.target_cliq.name },
+        status: post.cliq_merge_proposal.status,
+        yes_votes: post.cliq_merge_proposal.yes_votes,
+        no_votes: post.cliq_merge_proposal.no_votes,
+        phase_1_expires_at: post.cliq_merge_proposal.phase_1_expires_at,
+        phase_2_expires_at: post.cliq_merge_proposal.phase_2_expires_at
+      } : nil
     }
   end
 end

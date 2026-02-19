@@ -73,14 +73,20 @@ module ApiClient
 
     def auth_headers
       token = session[:jwt_token]
-      headers = if token
-                  {
-                    "Authorization" => "Bearer #{token}",
-                    "HTTP_AUTHORIZATION" => "Bearer #{token}"
-                  }
-                else
-                  {}
-                end
+      headers = {
+        "X-Analytic-User-Ip" => request.remote_ip,
+        "X-Analytic-User-Agent" => request.user_agent,
+        "X-Forwarded-For" => request.remote_ip,
+        "User-Agent" => request.user_agent
+      }
+      
+      if token
+        headers.merge!({
+          "Authorization" => "Bearer #{token}",
+          "HTTP_AUTHORIZATION" => "Bearer #{token}"
+        })
+      end
+
       Rails.logger.info("Auth headers: #{headers.inspect}, Token present: #{token.present?}")
       headers
     end

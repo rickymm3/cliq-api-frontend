@@ -1,5 +1,6 @@
 class Api::CliqsController < Api::BaseController
   before_action :authenticate_api_user_optional!, only: [:show]
+  before_action :extract_analytics_headers, only: [:show, :index]
 
   def index
     scope = Cliq.all
@@ -28,6 +29,11 @@ class Api::CliqsController < Api::BaseController
         rank: cliq.rank,
         slug: cliq.slug,
         posts_count: cliq.posts_count,
+        canonical_id: cliq.canonical_id,
+        lens: cliq.lens,
+        is_alias: cliq.alias?,
+        hierarchy: cliq.hierarchy_string,
+        effective_cliq_id: cliq.effective_cliq.id,
         created_at: cliq.created_at,
         updated_at: cliq.updated_at,
         is_subscribed: is_subscribed,
@@ -92,7 +98,7 @@ class Api::CliqsController < Api::BaseController
     # GET /api/cliqs/search?q=query - Search cliqs by name and description
     query = params[:q].to_s.strip
     page = (params[:page] || 1).to_i
-    per_page = params[:per_page] || 10
+    per_page = (params[:per_page] || 10).to_i
     
     if query.blank?
       render json: {
@@ -102,10 +108,23 @@ class Api::CliqsController < Api::BaseController
       return
     end
     
-    # Search in name and description, ranked by posts_count
+    # Search in name and description, ranked by relevance then posts_count
     search_term = "%#{query}%"
+    starts_with_term = "#{query}%"
+    
+    # Priority:
+    # 0. Exact Name Match
+    # 1. Name Starts With Query
+    # 2. Name Contains Query
+    # 3. Description Contains Query
+    
     results = Cliq
       .where("LOWER(name) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)", search_term, search_term)
+      .order(Arel.sql("CASE 
+        WHEN LOWER(name) = LOWER(#{Cliq.connection.quote(query)}) THEN 0
+        WHEN LOWER(name) LIKE LOWER(#{Cliq.connection.quote(starts_with_term)}) THEN 1
+        ELSE 2
+      END"))
       .order(Arel.sql("COALESCE(posts_count, 0) DESC"))
       .order(:name)
     
@@ -162,8 +181,21 @@ class Api::CliqsController < Api::BaseController
 
   private
 
+  def extract_analytics_headers
+    # Extract headers forwarded by the frontend
+    # We prefer the custom headers if present, otherwise fall back to the request's remote_ip/user_agent
+    # (which might be the frontend server's IP if not configured as a trusted proxy)
+    @visitor_ip = request.headers["X-Analytic-User-Ip"] || request.remote_ip
+    @visitor_user_agent = request.headers["X-Analytic-User-Agent"] || request.user_agent
+
+    if params[:action] == 'show' && params[:id].present?
+      # Log the visit asynchronously-ish (at least in a way that doesn't block the logic too much)
+      CliqVisit.log_visit(params[:id], @visitor_ip, @visitor_user_agent, current_user&.id)
+    end
+  end
+
   def cliq_params
-    params.require(:cliq).permit(:name, :description, :parent_cliq_id, :rank, :slug)
+    params.require(:cliq).permit(:name, :description, :parent_cliq_id, :rank, :slug, :canonical_id, :lens)
   end
 
   def is_subscribed_through_parent(cliq)
@@ -181,6 +213,11 @@ class Api::CliqsController < Api::BaseController
       parent_cliq_id: cliq.parent_cliq_id,
       rank: cliq.rank,
       slug: cliq.slug,
+      posts_count: cliq.posts_count,
+      canonical_id: cliq.canonical_id,
+      lens: cliq.lens,
+      is_alias: cliq.alias?,
+      hierarchy: cliq.hierarchy_string,
       created_at: cliq.created_at,
       updated_at: cliq.updated_at
     }

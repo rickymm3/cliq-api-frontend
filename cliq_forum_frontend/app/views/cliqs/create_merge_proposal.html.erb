@@ -1,0 +1,73 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm border-warning">
+        <div class="card-header bg-warning-subtle text-warning-emphasis">
+          <h4 class="mb-1">Propose Merge for "<%= @cliq["name"] %>"</h4>
+          <div class="small text-muted d-flex align-items-center">
+             <i class="bi bi-folder2-open me-1"></i>
+             <%= @cliq["hierarchy"] || @cliq["name"] %>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning mb-4">
+            <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Warning: Destructive Action</h5>
+            <p class="mb-0">
+              This proposal suggests <strong>MERGING</strong> the current Cliq (<%= @cliq["name"] %>) into a Target Cliq.
+              If approved, this Cliq will effectively be absorbed by the target. Its content will be moved or aliased.
+            </p>
+          </div>
+
+          <% if @errors.present? %>
+            <div class="alert alert-danger">
+              <% @errors.each do |error| %>
+                <div><%= error %></div>
+              <% end %>
+            </div>
+          <% end %>
+
+          <%= form_with url: merge_proposal_cliq_path(@cliq["id"]), method: :post, scope: :proposal, local: true do |f| %>
+            
+            <!-- Target Category Search/Select -->
+            <div class="mb-4" data-controller="cliq-search">
+              <label class="form-label fw-bold">Select Target Category *</label>
+              <div class="form-text mb-2">Search for the category you want to merge <strong><%= @cliq["name"] %></strong> into.</div>
+              
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search target category..." data-cliq-search-target="input" data-action="input->cliq-search#search">
+                <button class="btn btn-outline-secondary" type="button" disabled>
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
+              
+              <!-- Hidden ID field -->
+              <%= f.hidden_field :target_cliq_id, required: true, data: { "cliq-search-target": "idField" } %>
+              
+              <!-- Results Dropdown -->
+              <div class="list-group mt-2 position-absolute shadow-sm w-100 bg-white" style="z-index: 1000; max-height: 200px; overflow-y: auto; display: none;" data-cliq-search-target="results">
+                <!-- Javascript will populate this -->
+              </div>
+              
+              <!-- Selected Display -->
+              <div class="mt-2 p-2 bg-light border rounded d-none" data-cliq-search-target="selectionDisplay">
+                 Selected Target: <span class="fw-bold text-success" data-cliq-search-target="selectionName"></span>
+                 <button type="button" class="btn-close ms-2 float-end" aria-label="Close" data-action="cliq-search#clear"></button>
+              </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="mb-4">
+              <%= f.label :reason, "Reason for Merge *", class: "form-label fw-bold" %>
+              <%= f.text_area :reason, rows: 4, class: "form-control", required: true, placeholder: "Why should these categories be merged? e.g., 'Duplicate content', 'Same topic differently named', etc." %>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+              <%= link_to "Cancel", cliq_path(@cliq["id"]), class: "btn btn-outline-secondary" %>
+              <%= f.submit "Submit Merge Proposal", class: "btn btn-warning" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

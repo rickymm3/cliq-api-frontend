@@ -62,23 +62,32 @@
               <h5 class="mb-3">
                 🏠 Cliqs <span class="text-muted">(<%= @cliq_pagination["total_count"] %> found)</span>
               </h5>
-              <div class="row g-3 mb-4">
+              <div class="mb-4">
                 <% @cliq_results.each do |cliq| %>
-                  <div class="col-md-6 col-lg-4">
-                    <%= link_to cliq_path(cliq["id"]), class: "card border-0 shadow-sm text-decoration-none text-dark h-100", style: "transition: all 0.3s ease;" do %>
-                      <div class="card-body">
-                        <h5 class="card-title mb-2"><%= cliq["name"] %></h5>
-                        <p class="card-text text-muted small mb-3">
-                          <%= truncate(cliq["description"], length: 120) %>
-                        </p>
-                        <div class="d-flex justify-content-between align-items-center">
-                          <small class="badge bg-secondary">
-                            <%= cliq["posts_count"] || 0 %> posts
-                          </small>
-                        </div>
+                  <%= link_to cliq_path(cliq["id"]), class: "card border-0 shadow-sm text-decoration-none text-dark mb-3 d-block", style: "transition: all 0.3s ease;" do %>
+                    <div class="card-body">
+                      <!-- Hierarchy Breadcrumb -->
+                      <div class="text-muted small mb-1">
+                        <i class="bi bi-folder2-open me-1"></i>
+                        <%= cliq["hierarchy"] || cliq["name"] %>
                       </div>
-                    <% end %>
-                  </div>
+
+                      <h5 class="card-title mb-2 text-primary"><%= cliq["name"] %></h5>
+                      
+                      <% if cliq["description"].present? %>
+                        <p class="card-text text-muted small mb-2">
+                          <%= truncate(cliq["description"], length: 300) %>
+                        </p>
+                      <% end %>
+
+                      <div class="d-flex align-items-center mt-2">
+                        <span class="badge bg-light text-dark border me-2">
+                          <i class="bi bi-chat-square-text me-1"></i>
+                          <%= cliq["posts_count"] || 0 %> posts
+                        </span>
+                      </div>
+                    </div>
+                  <% end %>
                 <% end %>
               </div>
               <% if @cliq_pagination["total_pages"] && @cliq_pagination["total_pages"] > 1 %>
@@ -99,11 +108,18 @@
                     <!-- Cliq Hierarchy Breadcrumb -->
                     <div class="mb-2">
                       <small class="text-muted">
-                        <% if post["cliq"]["parent_cliq"] %>
-                          <%= link_to post["cliq"]["parent_cliq"]["name"], cliq_path(post["cliq"]["parent_cliq"]["id"]), class: "text-decoration-none text-muted fw-semibold" %>
-                          <span class="text-muted mx-1">›</span>
+                        <% if post["cliq"]["hierarchy"] %>
+                           <!-- Use full hierarchy from API if available -->
+                           <i class="bi bi-folder2-open me-1"></i>
+                           <%= post["cliq"]["hierarchy"] %>
+                        <% else %>
+                          <!-- Fallback to simple parent display -->
+                          <% if post["cliq"]["parent_cliq"] && post["cliq"]["parent_cliq"]["name"] != "Cliq" %>
+                            <%= link_to post["cliq"]["parent_cliq"]["name"], cliq_path(post["cliq"]["parent_cliq"]["id"]), class: "text-decoration-none text-muted fw-semibold" %>
+                            <span class="text-muted mx-1">›</span>
+                          <% end %>
+                          <strong class="text-primary"><%= link_to post["cliq"]["name"], cliq_path(post["cliq"]["id"]), class: "text-decoration-none text-primary" %></strong>
                         <% end %>
-                        <strong class="text-primary"><%= link_to post["cliq"]["name"], cliq_path(post["cliq"]["id"]), class: "text-decoration-none text-primary" %></strong>
                       </small>
                     </div>
 
