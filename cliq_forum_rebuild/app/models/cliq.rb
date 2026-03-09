@@ -17,6 +17,20 @@ class Cliq < ApplicationRecord
   has_many :source_merge_proposals, class_name: 'CliqMergeProposal', foreign_key: 'source_cliq_id', dependent: :destroy
   has_many :target_merge_proposals, class_name: 'CliqMergeProposal', foreign_key: 'target_cliq_id', dependent: :destroy
 
+  # Cliq Alliances
+  has_many :outgoing_alliances, class_name: 'CliqAlliance', foreign_key: 'source_cliq_id', dependent: :destroy
+  has_many :allies, through: :outgoing_alliances, source: :target_cliq
+  has_many :incoming_alliances, class_name: 'CliqAlliance', foreign_key: 'target_cliq_id', dependent: :destroy
+  has_many :allied_sources, through: :incoming_alliances, source: :source_cliq
+  
+  def related_alliances
+    Cliq.where(id: outgoing_alliances.select(:target_cliq_id))
+        .or(Cliq.where(id: incoming_alliances.select(:source_cliq_id)))
+  end
+
+  has_many :sent_alliance_proposals, class_name: 'CliqAllianceProposal', foreign_key: 'source_cliq_id', dependent: :destroy
+  has_many :received_alliance_proposals, class_name: 'CliqAllianceProposal', foreign_key: 'target_cliq_id', dependent: :destroy
+
   # Returns the unique visitor count for the last 7 days (rolling)
   def weekly_unique_visitors
     # Calculate directly from raw visits if available (most accurate for recent window)
@@ -92,6 +106,34 @@ class Cliq < ApplicationRecord
 		
 		names.join(" > ")
 	end
+
+  def ancestors_list
+    list = []
+    current = parent_cliq
+    safety_counter = 0
+    while current && safety_counter < 15
+      list.unshift(current)
+      current = current.parent_cliq
+      safety_counter += 1
+    end
+    
+    # Remove the root 'Cliq' node if it exists
+    list.shift if list.any? && list.first.name.downcase == 'cliq'
+    
+    list
+  end
+  
+  def root_ancestor
+    # Return the first real ancestor (which would be the main category)
+    # OR self if we are at the top level (but below the technical 'Cliq' root)
+    if ancestors_list.any?
+      ancestors_list.first
+    elsif parent_cliq&.name&.downcase == 'cliq'
+      self
+    else
+      nil # We are likely the root itself or detached
+    end
+  end
 
 	# Get all descendant cliqs (children, grandchildren, etc.)
 	def descendants

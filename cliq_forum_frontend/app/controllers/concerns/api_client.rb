@@ -2,8 +2,12 @@ module ApiClient
   extend ActiveSupport::Concern
 
   included do
+    def api_base_url
+      ENV.fetch('API_URL', 'http://localhost:3000') # API runs on 3000
+    end
+
     def api_get(path, params = {}, options = {})
-      url = "http://localhost:3000/api/#{path}"
+      url = "#{api_base_url}/api/#{path}"
       response = HTTParty.get(url, headers: auth_headers, query: params)
       Rails.logger.info("API GET #{url}: #{response.code} - #{response.body}")
       
@@ -17,8 +21,26 @@ module ApiClient
       end
     end
 
+    def api_delete(path, params = {})
+      url = "#{api_base_url}/api/#{path}"
+      response = HTTParty.delete(url, headers: auth_headers, query: params)
+      Rails.logger.info("API DELETE #{url}")
+
+      if response.code == 401
+        # handle_auth_error(response) 
+        # Don't redirect immediately for API calls unless needed
+      end
+      
+      begin
+        JSON.parse(response.body)
+      rescue JSON::ParserError => e
+        Rails.logger.error("JSON Parse Error for #{url}: #{e.message}")
+        { "error" => "Invalid response", "status" => response.code }
+      end
+    end
+
     def api_post(path, data, options = {})
-      url = "http://localhost:3000/api/#{path}"
+      url = "#{api_base_url}/api/#{path}"
       headers = auth_headers.merge({ "Content-Type" => "application/json" })
       Rails.logger.info("API POST #{url}: #{data.inspect}")
       response = HTTParty.post(url, 
@@ -31,14 +53,32 @@ module ApiClient
       
       begin
         JSON.parse(response.body)
-      rescue JSON::ParserError => e
-        Rails.logger.error("JSON Parse Error for #{url}: #{e.message}. Body: #{response.body[0..100]}...")
+      rescue JSON::ParserError
+        { "error" => "Invalid response", "status" => response.code }
+      end
+    end
+
+    def api_patch(path, data, options = {})
+      url = "#{api_base_url}/api/#{path}"
+      headers = auth_headers.merge({ "Content-Type" => "application/json" })
+      Rails.logger.info("API PATCH #{url}: #{data.inspect}")
+      response = HTTParty.patch(url, 
+        body: data.to_json,
+        headers: headers
+      )
+      Rails.logger.info("API PATCH Response #{url}: #{response.code} - #{response.body}")
+      
+      handle_auth_error(response) if response.code == 401 && !options[:skip_auth_check]
+      
+      begin
+        JSON.parse(response.body)
+      rescue JSON::ParserError
         { "error" => "Invalid response", "status" => response.code }
       end
     end
 
     def api_put(path, data, options = {})
-      url = "http://localhost:3000/api/#{path}"
+      url = "#{api_base_url}/api/#{path}"
       headers = auth_headers.merge({ "Content-Type" => "application/json" })
       Rails.logger.info("API PUT #{url}: #{data.inspect}")
       response = HTTParty.put(url, 
@@ -52,8 +92,8 @@ module ApiClient
       JSON.parse(response.body)
     end
 
-    def api_delete(path, options = {})
-      url = "http://localhost:3000/api/#{path}"
+    def api_delete_with_options(path, options = {})
+      url = "#{api_base_url}/api/#{path}"
       headers = auth_headers.merge({ "Content-Type" => "application/json" })
       Rails.logger.info("API DELETE #{url}")
       response = HTTParty.delete(url, headers: headers)

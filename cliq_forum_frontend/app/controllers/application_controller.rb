@@ -13,7 +13,11 @@ class ApplicationController < ActionController::Base
 
   def current_user
     if logged_in?
-      @current_user ||= { id: session[:user_id], email: session[:user_email] }
+      @current_user ||= { 
+        id: session[:user_id], 
+        email: session[:user_email],
+        admin: session[:user_admin]
+      }
     else
       nil
     end

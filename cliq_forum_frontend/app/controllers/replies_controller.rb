@@ -9,7 +9,9 @@ class RepliesController < ApplicationController
 
     # Use shallow route for fetching a specific reply
     response = api_get("replies/#{@reply_id}")
-    if response["status"] == "success"
+    return if performed?
+
+    if response && response["status"] == "success"
       @reply = response["data"]
       render turbo_stream: turbo_stream.replace("reply-#{@reply['id']}", partial: "replies/edit_form", locals: { reply: @reply, cliq_id: @cliq_id, post_id: @post_id })
     else
@@ -24,8 +26,9 @@ class RepliesController < ApplicationController
     
     # Use shallow route for update
     response = api_put("replies/#{@reply_id}", { reply: reply_params })
+    return if performed?
 
-    if response["status"] == "success"
+    if response && response["status"] == "success"
       @reply = response["data"]
       render turbo_stream: turbo_stream.replace("reply-#{@reply['id']}", partial: "replies/reply", locals: { reply: @reply })
     else
@@ -40,8 +43,9 @@ class RepliesController < ApplicationController
     
     # Use shallow route for delete
     response = api_delete("replies/#{@reply_id}")
+    return if performed?
 
-    if response["status"] == "success"
+    if response && response["status"] == "success"
       @reply = response["data"]
       render turbo_stream: turbo_stream.replace("reply-#{@reply['id']}", partial: "replies/reply", locals: { reply: @reply })
     else
@@ -54,8 +58,9 @@ class RepliesController < ApplicationController
     @post_id = params[:post_id]
     
     response = api_post("posts/#{@post_id}/replies", { reply: reply_params })
+    return if performed?
 
-    if response["status"] == "success"
+    if response && response["status"] == "success"
       @reply = response["data"]
       respond_to do |format|
         format.html { redirect_to cliq_post_path(@cliq_id, @post_id), notice: "Reply posted!", status: :see_other }

@@ -2,9 +2,19 @@
    current_user_id = current_user ? (current_user[:id] || current_user["id"]).to_i : nil
    post_user_id = post["user"]["id"].to_i
    is_mine = current_user_id == post_user_id
+   
+   # Contentious Logic
+   is_contentious = post["status"] == "contentious"
    mine_style = is_mine ? "border-left: 5px solid #0d6efd !important;" : ""
+   contentious_style = is_contentious ? "border: 2px solid #dc3545 !important;" : ""
+   final_style = "transition: transform 0.2s, box-shadow 0.2s; #{mine_style} #{contentious_style}"
 %>
-<div class="card border-0 shadow-sm mb-3 hover-shadow-sm" style="transition: transform 0.2s, box-shadow 0.2s; <%= mine_style %>">
+<div class="card border-0 shadow-sm mb-3 hover-shadow-sm" style="<%= final_style %>" id="post-<%= post['id'] %>">
+  <% if is_contentious %>
+    <div class="card-header bg-danger text-white py-1 px-3 small fw-bold">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> Contentious Content (Under Review)
+    </div>
+  <% end %>
   <% if post["feed_context"] && post["feed_context"]["type"] == "signal" && post["feed_context"]["signaler"] %>
     <div class="card-header bg-transparent border-0 pb-0 pt-2 ps-3">
       <small class="text-secondary fst-italic">
@@ -15,26 +25,99 @@
   <% end %>
   <div class="card-body">
     <!-- Header: Hierarchy & Meta -->
-    <div class="d-flex align-items-center flex-wrap mb-2 small text-muted">
+    <div class="d-flex justify-content-between align-items-start mb-2">
+      <div class="d-flex align-items-center flex-wrap small text-muted">
       
-      <!-- Cliq Path -->
-      <div class="d-flex align-items-center me-3">
-        <% if post["cliq"]["parent"].present? %>
-          <%= link_to post["cliq"]["parent"]["name"], cliq_path(post["cliq"]["parent"]["id"]), class: "fw-bold text-secondary text-decoration-none hover-dark", data: { turbo_frame: "_top" } %>
-          <span class="mx-1">/</span>
+      <!-- Cliq Path (Simplified & Colored) -->
+      <div class="d-flex align-items-center me-2">
+        <% 
+            # Ancestor filtering logic
+            ancestors = post["cliq"]["ancestors"] || []
+            main_cliq_color = nil
+
+            if ancestors.any? && ancestors.first["color"].present?
+               main_cliq_color = ancestors.first["color"]
+               # Skip the first ancestor (Main Cliq)
+               ancestors = ancestors.drop(1)
+            elsif post["cliq"].present? && post["cliq"]["color"].present?
+               # Fallback if cliq itself has color directly (e.g. is a main cliq or close to it)
+               main_cliq_color = post["cliq"]["color"]
+            end
+        %>
+
+        <% if main_cliq_color.present? %>
+            <div class="rounded-circle me-2" style="width: 8px; height: 8px; background-color: <%= main_cliq_color %>;" title="Theme Color"></div>
         <% end %>
+
+        <% if ancestors.any? %>
+           <% if ancestors.size == 1 %>
+             <!-- Single Parent (after filtering) -->
+             <%= link_to ancestors.first["name"], cliq_path(ancestors.first["id"]), class: "fw-bold text-secondary text-decoration-none hover-dark", data: { turbo_frame: "_top" } %>
+             <span class="mx-1">/</span>
+           <% else %>
+             <!-- Multilevel - Expandable -->
+             <div class="d-inline-flex align-items-center" data-controller="breadcrumb">
+               
+               <!-- Collapsed View -->
+               <span data-breadcrumb-target="collapsed" class="d-inline-flex align-items-center">
+                 <%= link_to ancestors.first["name"], cliq_path(ancestors.first["id"]), class: "fw-bold text-secondary text-decoration-none hover-dark", data: { turbo_frame: "_top" } %>
+                 <i class="bi bi-chevron-right small text-muted mx-1" style="font-size: 0.7em;"></i>
+                 
+                 <a href="#" class="text-muted me-1 text-decoration-none" data-action="click->breadcrumb#expand" title="Click to expand full path">...</a>
+                 <span class="mx-1">/</span>
+               </span>
+
+               <!-- Expanded View -->
+               <span data-breadcrumb-target="expanded" class="d-none d-inline-flex align-items-center">
+                 <% ancestors.each do |ancestor| %>
+                    <%= link_to ancestor["name"], cliq_path(ancestor["id"]), class: "fw-bold text-secondary text-decoration-none hover-dark", data: { turbo_frame: "_top" } %>
+                    <span class="mx-1">/</span>
+                 <% end %>
+               </span>
+
+             </div>
+           <% end %>
+        <% elsif post["cliq"]["parent"].present? && !main_cliq_color # Only fallback if no improved ancestors logic, and only if not colored (implies main cliq logic handled) %> 
+            <!-- Fallback for cached/old data structure without full ancestors list, but try to avoid duplicates -->
+            <%= link_to post["cliq"]["parent"]["name"], cliq_path(post["cliq"]["parent"]["id"]), class: "fw-bold text-secondary text-decoration-none hover-dark", data: { turbo_frame: "_top" } %>
+             <span class="mx-1">/</span>
+        <% end %>
+
         <%= link_to post["cliq"]["name"], cliq_path(post["cliq"]["id"]), class: "fw-bold text-dark text-decoration-none hover-primary", data: { turbo_frame: "_top" } %>
       </div>
-
-      <span class="d-none d-sm-inline mx-1">•</span>
-
-      <!-- User & Timestamp -->
-      <div>
-        <span class="me-1">Posted by</span>
-        <%= link_to post["user"]["email"].split('@').first, user_profile_path(post["user"]["id"]), class: "text-decoration-none text-muted fw-semibold hover-dark", data: { turbo_frame: "_top" } %>
-        <span class="mx-1">•</span>
-        <span title="<%= post["created_at"] %>"><%= time_ago_in_words(Time.parse(post["created_at"])) %> ago</span>
+    </div>
+      
+      <!-- Post Actions Dropdown -->
+      <div class="dropdown">
+        <button class="btn btn-sm btn-link text-muted p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <% unless is_contentious %>
+            <li>
+              <% if post["is_reported"] %>
+                <a class="dropdown-item d-flex align-items-center disabled text-muted" href="#">
+                  <i class="bi bi-flag-fill me-2"></i> Reported
+                </a>
+              <% else %>
+                <a class="dropdown-item d-flex align-items-center" href="#" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#reportModal"
+                  data-report-target-id="<%= post["id"] %>"
+                  data-report-target-type="post"
+                  data-report-cliq-id="<%= post["cliq"]["id"] %>">
+                  <i class="bi bi-flag me-2"></i> Report
+                </a>
+              <% end %>
+            </li>
+          <% end %>
+          <% if is_mine %>
+             <li><hr class="dropdown-divider"></li>
+             <li><a class="dropdown-item text-danger" href="#">Delete</a></li>
+          <% end %>
+        </ul>
       </div>
+
     </div>
 
     <!-- Title Area -->
@@ -72,6 +155,46 @@
         </div>
       <% end %>
 
+      <!-- Alliance Proposal Voting UI -->
+      <% if post["kind"] == "alliance_proposal" && post["alliance_proposal"].present? %>
+        <% is_disband = post["alliance_proposal"]["kind"] == "disband_alliance" %>
+        <div class="card mb-3 <%= is_disband ? 'border-danger' : 'border-warning' %>" 
+             data-controller="alliance-proposal" 
+             data-alliance-proposal-id-value="<%= post["alliance_proposal"]["id"] %>"
+             data-alliance-proposal-kind-value="<%= post["alliance_proposal"]["kind"] %>">
+          <div class="card-header <%= is_disband ? 'bg-danger-subtle text-danger-emphasis' : 'bg-warning-subtle text-warning-emphasis' %> d-flex justify-content-between align-items-center">
+            <strong><%= is_disband ? "Proposal: Disband Alliance" : "Alliance Proposal" %></strong>
+            <span class="badge bg-secondary" data-alliance-proposal-target="status"><%= post["alliance_proposal"]["status"].humanize %></span>
+          </div>
+          <div class="card-body">
+            <p class="card-text">
+              <% if is_disband %>
+                 Request to <strong>DISSOLVE</strong> the alliance between <strong><%= post["alliance_proposal"]["source_cliq"]["name"] %></strong> and <strong><%= post["alliance_proposal"]["target_cliq"]["name"] %></strong>.
+              <% else %>
+                 Request to form an alliance between <strong><%= post["alliance_proposal"]["source_cliq"]["name"] %></strong> and <strong><%= post["alliance_proposal"]["target_cliq"]["name"] %></strong>.
+              <% end %>
+            </p>
+            
+            <div data-alliance-proposal-target="result" class="<%= post["alliance_proposal"]["status"] == 'proposal_phase' ? 'd-none' : '' %> alert <%= post["alliance_proposal"]["status"] == 'approved' ? 'alert-success' : 'alert-danger' %> py-2 mb-0">
+              <i class="bi <%= post["alliance_proposal"]["status"] == 'approved' ? 'bi-check-circle-fill' : 'bi-x-circle-fill' %> me-2"></i>
+              Proposal <%= post["alliance_proposal"]["status"].humanize %>
+            </div>
+
+            <div data-alliance-proposal-target="buttons" class="d-flex gap-2 <%= post["alliance_proposal"]["status"] != 'proposal_phase' ? 'd-none' : '' %>">
+              <button class="btn btn-outline-success btn-sm d-flex align-items-center gap-2" data-action="click->alliance-proposal#voteYes" <%= post["alliance_proposal"]["status"] != 'proposal_phase' ? 'disabled' : '' %>>
+                <i class="bi bi-check-circle"></i> 
+                Yes <span class="badge text-bg-success" data-alliance-proposal-target="yesCount"><%= post["alliance_proposal"]["yes_votes"] %></span>
+              </button>
+              
+              <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2" data-action="click->alliance-proposal#voteNo" <%= post["alliance_proposal"]["status"] != 'proposal_phase' ? 'disabled' : '' %>>
+                <i class="bi bi-x-circle"></i> 
+                No <span class="badge text-bg-danger" data-alliance-proposal-target="noCount"><%= post["alliance_proposal"]["no_votes"] %></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
       <h5 class="card-title fw-bold mb-1">
         <%= link_to post["title"], cliq_post_path(post["cliq"]["id"], post["id"]), class: "text-decoration-none text-dark stretched-link-exception", data: { turbo_frame: "_top" } %>
       </h5>
@@ -103,7 +226,7 @@
           <%= normalized_type.capitalize %>
         </span>
       </div>
-    </div>
+      </div>
 
     <!-- Content Preview -->
     <div class="mb-3">
@@ -116,60 +239,90 @@
     </div>
 
     <!-- Footer Actions -->
-    <div class="d-flex align-items-center border-top pt-3 mt-3">
-      
-      <!-- Like/Dislike Buttons -->
-      <div class="btn-group me-3" role="group">
-        <button class="btn btn-sm btn-light text-secondary border-0 post-like-btn" 
-                data-post-id="<%= post["id"] %>" 
-                data-interaction="<%= post["user_interaction"] %>"
-                title="Like">
-           <span class="<%= post["user_interaction"] == "like" ? "text-danger" : "" %> fw-bold">
-             <%= post["user_interaction"] == "like" ? "❤️" : "🤍" %>
-             <span class="d-none d-md-inline ms-1">Like</span>
-           </span>
-        </button>
-        <button class="btn btn-sm btn-light text-secondary border-0 post-dislike-btn" 
-                data-post-id="<%= post["id"] %>" 
-                data-interaction="<%= post["user_interaction"] %>"
-                title="Dislike">
-           <span class="<%= post["user_interaction"] == "dislike" ? "text-primary" : "" %>">
-              👎 
-           </span>
-        </button>
+    <% if is_contentious %>
+      <div class="d-flex align-items-center justify-content-between border-top pt-3 mt-3 bg-danger bg-opacity-10 p-2 rounded" 
+           data-controller="moderation-vote" 
+           data-moderation-vote-post-id-value="<%= post["id"] %>"
+           data-moderation-vote-initial-vote-value="<%= post["moderation_vote"] %>">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-exclamation-octagon-fill text-danger me-2"></i>
+          <span class="small fw-bold text-danger">Under Review</span>
+        </div>
+        <div class="btn-group btn-group-sm">
+           <button class="btn btn-outline-danger" title="Vote to Remove" data-action="click->moderation-vote#voteRemove" data-moderation-vote-target="removeButton">Remove</button>
+           <button class="btn btn-outline-success" title="Vote to Keep" data-action="click->moderation-vote#voteKeep" data-moderation-vote-target="keepButton">Keep</button>
+        </div>
       </div>
+    <% else %>
+      <div class="border-top pt-2 mt-3">
+        <!-- Metadata Row (Moved from Header) -->
+        <div class="d-flex justify-content-end align-items-center mb-2 small text-muted">
+             <div>
+              <span class="me-1">Posted by</span>
+              <%= link_to post["user"]["email"].split('@').first, user_profile_path(post["user"]["id"]), class: "text-decoration-none text-muted fw-semibold hover-dark", data: { turbo_frame: "_top" } %>
+              <span class="mx-1">•</span>
+              <span title="<%= post["created_at"] %>"><%= time_ago_in_words(Time.parse(post["created_at"])) %> ago</span>
+            </div>
+        </div>
 
-      <!-- Heat Score -->
-      <div class="btn btn-sm btn-light text-secondary border-0 d-flex align-items-center me-2" title="Heat Score">
-        <span class="me-1">🔥</span>
-        <span class="fw-bold"><%= number_with_precision(post["heat_score"].to_f, precision: 1) %></span>
+        <div class="d-flex align-items-center">
+        
+        <!-- Like/Dislike Buttons -->
+        <div class="btn-group me-3" role="group">
+          <button class="btn btn-sm btn-light text-secondary border-0 post-like-btn" 
+                  data-post-id="<%= post["id"] %>" 
+                  data-interaction="<%= post["user_interaction"] %>"
+                  title="Like">
+            <span class="<%= post["user_interaction"] == "like" ? "text-danger" : "" %> fw-bold">
+              <%= post["user_interaction"] == "like" ? "❤️" : "🤍" %>
+              <span class="d-none d-md-inline ms-1">Like</span>
+            </span>
+          </button>
+          <button class="btn btn-sm btn-light text-secondary border-0 post-dislike-btn" 
+                  data-post-id="<%= post["id"] %>" 
+                  data-interaction="<%= post["user_interaction"] %>"
+                  title="Dislike">
+            <span class="<%= post["user_interaction"] == "dislike" ? "text-primary" : "" %>">
+                👎 
+            </span>
+          </button>
+        </div>
+
+        <!-- Heat Score -->
+        <div class="btn btn-sm btn-light text-secondary border-0 d-flex align-items-center me-2" title="Heat Score">
+          <span class="me-1">🔥</span>
+          <span class="fw-bold"><%= number_with_precision(post["heat_score"].to_f, precision: 1) %></span>
+        </div>
+
+        <!-- Comments Link -->
+        <%= link_to cliq_post_path(post["cliq"]["id"], post["id"]), class: "btn btn-sm btn-light text-secondary border-0 d-flex align-items-center me-auto", data: { turbo_frame: "_top" } do %>
+          <span class="me-2">💬</span>
+          <span class="fw-bold"><%= post["replies_count"] || 0 %></span>
+          <span class="d-none d-md-inline ms-1">Comments</span>
+        <% end %>
+
+        <!-- Share and Signal -->
+        <div class="d-flex text-muted gap-2">
+          <% if logged_in? %>
+            <button class="btn btn-sm btn-light text-secondary border-0 post-signal-btn" 
+                    data-post-id="<%= post["id"] %>"
+                    data-signaled="<%= post["is_signaled"] %>"
+                    title="Signal / Pin this post for your followers">
+              <span class="<%= post["is_signaled"] ? "text-success" : "" %> fw-bold signal-icon-wrapper">
+                <i class="bi <%= post["is_signaled"] ? "bi-pin-angle-fill" : "bi-pin-angle" %>"></i>
+                <span class="d-none d-md-inline ms-1"><%= post["is_signaled"] ? "Signaled" : "Signal" %></span>
+              </span>
+            </button>
+          <% end %>
+          <button class="btn btn-sm btn-light text-secondary border-0">
+            ↪ <span class="d-none d-md-inline">Share</span>
+          </button>
+        </div>
       </div>
-
-      <!-- Comments Link -->
-      <%= link_to cliq_post_path(post["cliq"]["id"], post["id"]), class: "btn btn-sm btn-light text-secondary border-0 d-flex align-items-center me-auto", data: { turbo_frame: "_top" } do %>
-        <span class="me-2">💬</span>
-        <span class="fw-bold"><%= post["replies_count"] || 0 %></span>
-        <span class="d-none d-md-inline ms-1">Comments</span>
-      <% end %>
-
-      <!-- Share and Signal -->
-      <div class="d-flex text-muted gap-2">
-         <% if logged_in? %>
-           <button class="btn btn-sm btn-light text-secondary border-0 post-signal-btn" 
-                   data-post-id="<%= post["id"] %>"
-                   data-signaled="<%= post["is_signaled"] %>"
-                   title="Signal / Pin this post for your followers">
-             <span class="<%= post["is_signaled"] ? "text-success" : "" %> fw-bold signal-icon-wrapper">
-               <i class="bi <%= post["is_signaled"] ? "bi-pin-angle-fill" : "bi-pin-angle" %>"></i>
-               <span class="d-none d-md-inline ms-1"><%= post["is_signaled"] ? "Signaled" : "Signal" %></span>
-             </span>
-           </button>
-         <% end %>
-         <button class="btn btn-sm btn-light text-secondary border-0">
-           ↪ <span class="d-none d-md-inline">Share</span>
-         </button>
-      </div>
-    </div>
+    
+    </div> <!-- Closing outer border-top div -->
+    
+    <% end %>
 
   </div>
 </div>

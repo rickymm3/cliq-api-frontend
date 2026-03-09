@@ -35,6 +35,7 @@ Rails.application.routes.draw do
       resources :posts
       resources :alias_proposals, only: [:index, :create], controller: 'cliq_alias_proposals'
       resources :merge_proposals, only: [:create], controller: 'cliq_merge_proposals'
+      resources :alliance_proposals, only: [:index, :create], controller: 'cliq_alliance_proposals'
       
       get :children, on: :member
       get :search, on: :collection
@@ -47,6 +48,9 @@ Rails.application.routes.draw do
       post :vote, on: :member
     end
     resources :merge_proposals, only: [:show], controller: 'cliq_merge_proposals' do
+      post :vote, on: :member
+    end
+    resources :alliance_proposals, only: [:show], controller: 'cliq_alliance_proposals' do
       post :vote, on: :member
     end
     resources :posts do
@@ -62,6 +66,7 @@ Rails.application.routes.draw do
       post :like, on: :member
       post :dislike, on: :member
       delete :unlike, on: :member
+      resource :moderation_vote, only: [:create]
     end
     resources :direct_messages
     resources :direct_message_conversations
@@ -70,5 +75,9 @@ Rails.application.routes.draw do
     resources :followed_users
     resources :moderator_roles
     resources :reports
+    
+    namespace :admin do
+      get 'dashboard', to: 'dashboard#index'
+    end
   end
 end

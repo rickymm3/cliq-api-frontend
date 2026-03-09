@@ -34,7 +34,11 @@
         <%# Removed title as it is just one link now %>
         <div class="sidebar-section-content">
           <%= link_to dashboard_path, class: "sidebar-link #{current_page?(dashboard_path) ? 'active' : ''}", title: "Profile" do %>
-            <i class="bi bi-person-circle me-3"></i>
+            <% if current_user && current_user[:admin] %>
+              <i class="bi bi-person-circle me-3 text-danger"></i>
+            <% else %>
+              <i class="bi bi-person-circle me-3"></i>
+            <% end %>
             <span class="link-text">Profile</span>
           <% end %>
         </div>
@@ -67,10 +71,19 @@
       <div class="sidebar-section">
         <div class="sidebar-section-content">
           <% @main_cliqs.each do |cliq| %>
+            <% 
+               active_class = current_page?(cliq_path(cliq['id'])) ? 'active' : ''
+               border_style = cliq["color"].present? ? "border-left: 4px solid #{cliq["color"]};" : ""
+            %>
             <%= link_to cliq_path(cliq["id"]), 
-                class: "sidebar-link #{current_page?(cliq_path(cliq['id'])) ? 'active' : ''}",
+                class: "sidebar-link rounded-0 #{active_class}",
+                style: "#{border_style}",
                 title: cliq["name"] do %>
-              <i class="bi <%= icon_for_cliq(cliq["name"]) %> me-3"></i>
+              <% if cliq["color"].present? %>
+                 <span class="me-3" style="width: 1rem; text-align: center; color: <%= cliq["color"] %>;"><i class="bi <%= icon_for_cliq(cliq["name"]) %>"></i></span>
+              <% else %>
+                 <i class="bi <%= icon_for_cliq(cliq["name"]) %> me-3"></i>
+              <% end %>
               <span class="link-text"><%= cliq["name"] %></span>
             <% end %>
           <% end %>

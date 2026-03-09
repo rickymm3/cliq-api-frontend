@@ -6,16 +6,67 @@
          post_user_id = @post["user"]["id"].to_i
          is_mine = current_user_id == post_user_id
          
-         mine_style = is_mine ? "border-left: 5px solid #0d6efd !important;" : ""
+         border_color = @cliq["color"].present? ? @cliq["color"] : "#0d6efd" 
+         mine_style = is_mine ? "border-left: 5px solid #{border_color} !important;" : ""
       %>
       <div class="card border-0 shadow-sm mb-4" style="<%= mine_style %>">
         <div class="card-body">
           <!-- Breadcrumb -->
           <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb mb-0">
-              <li class="breadcrumb-item"><%= link_to "Home", root_path %></li>
-              <li class="breadcrumb-item"><%= link_to @cliq["name"], cliq_path(@cliq["id"].to_i) %></li>
-              <li class="breadcrumb-item active" aria-current="page"><%= @post["title"] %></li>
+            <ol class="breadcrumb mb-0 align-items-center">
+              
+              <!-- Color Indicator -->
+              <% if @cliq["color"].present? %>
+                <li class="breadcrumb-item d-flex align-items-center">
+                  <div class="rounded-circle" style="width: 10px; height: 10px; background-color: <%= @cliq["color"] %>;" title="Theme Color"></div>
+                </li>
+              <% end %>
+              
+              <!-- Ancestors Logic -->
+              <% 
+                # Filter out the root ancestor if it is a "Main Cliq" (identified by having a color)
+                # We assume the first ancestor is the root.
+                ancestors = @cliq["ancestors"] || []
+                if ancestors.any? && ancestors.first["color"].present?
+                  # Skip the first ancestor (Main Cliq)
+                  ancestors = ancestors.drop(1)
+                end
+              %>
+              
+              <% if ancestors.any? %>
+                <% if ancestors.size == 1 %>
+                   <!-- Single Parent (after filtering): just show it -->
+                   <li class="breadcrumb-item">
+                     <%= link_to ancestors.first["name"], cliq_path(ancestors.first["id"]), class: "text-decoration-none" %>
+                   </li>
+                <% else %>
+                   <!-- Multiple Ancestors: Expandable -->
+                   <li class="breadcrumb-item" data-controller="breadcrumb">
+                      <!-- Collapsed: Show first remaining ancestor with expand action -->
+                      <span data-breadcrumb-target="collapsed">
+                        <%= link_to ancestors.first["name"], cliq_path(ancestors.first["id"]), class: "text-decoration-none fw-bold" %>
+                         <i class="bi bi-chevron-right small text-muted mx-1" style="font-size: 0.7em;"></i>
+                         
+                         <a href="#" class="text-muted text-decoration-none" data-action="click->breadcrumb#expand" title="Click to see full path">...</a>
+                      </span>
+
+                      <!-- Expanded: Show minimal path (or full path) -->
+                      <span data-breadcrumb-target="expanded" class="d-none">
+                        <% ancestors.each_with_index do |ancestor, index| %>
+                          <%= link_to ancestor["name"], cliq_path(ancestor["id"]), class: "text-decoration-none" %>
+                          <% unless index == ancestors.size - 1 %>
+                            <span class="text-muted mx-1">/</span>
+                          <% end %>
+                        <% end %>
+                      </span>
+                   </li>
+                <% end %>
+              <% end %>
+
+              <li class="breadcrumb-item">
+                <%= link_to @cliq["name"], cliq_path(@cliq["id"].to_i), class: "text-decoration-none fw-bold" %>
+              </li>
+              <li class="breadcrumb-item active text-truncate" style="max-width: 300px;" aria-current="page"><%= @post["title"] %></li>
             </ol>
           </nav>
 
@@ -50,49 +101,61 @@
           <hr>
 
           <!-- Post Footer -->
-          <div class="d-flex justify-content-between align-items-center mt-4">
-            <div>
-              <button class="btn btn-primary fw-bold" data-action="click->reply-linker#setTarget">
-                <i class="bi bi-reply-fill me-2"></i> Reply
-              </button>
+          <% if @post["status"] == "contentious" %>
+            <%= render "shared/democracy_console", post: @post %>
+          <% elsif @post["kind"] == "merge_proposal" || @post["merge_proposal"].present? %>
+             <div class="alert alert-info mt-4">
+               <i class="bi bi-info-circle me-2"></i> This is a moderation proposal. Please create a new post to discuss it.
+             </div>
+          <% else %>
+            <div class="d-flex justify-content-between align-items-center mt-4">
+              <div>
+                <button class="btn btn-primary fw-bold" data-action="click->reply-linker#setTarget">
+                  <i class="bi bi-reply-fill me-2"></i> Reply
+                </button>
+              </div>
+              
+              <div class="text-muted small">
+                <% if @post["user"]["id"] == current_user&.dig("id") %>
+                  <%= link_to "Edit", edit_cliq_post_path(@cliq["id"].to_i, @post["id"].to_i), class: "btn btn-sm btn-outline-secondary" %>
+                  <%= link_to "Delete", cliq_post_path(@cliq["id"].to_i, @post["id"].to_i), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-sm btn-outline-danger" %>
+                <% end %>
+              </div>
             </div>
-            
-            <div class="text-muted small">
-              <% if @post["user"]["id"] == current_user&.dig("id") %>
-                <%= link_to "Edit", edit_cliq_post_path(@cliq["id"].to_i, @post["id"].to_i), class: "btn btn-sm btn-outline-secondary" %>
-                <%= link_to "Delete", cliq_post_path(@cliq["id"].to_i, @post["id"].to_i), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-sm btn-outline-danger" %>
-              <% end %>
-            </div>
-          </div>
+          <% end %>
         </div>
       </div>
 
       <!-- Reply Section -->
-      <div class="mt-4" id="replies-section">
-        <h5 class="mb-3">Replies (<%= @replies.count %>)</h5>
-        
-        <!-- List Replies -->
-        <div id="replies_list" class="mb-4">
-          <% if @replies.any? %>
-            <%= render partial: "replies/reply", collection: @replies, as: :reply %>
-          <% else %>
-            <div id="no_replies_message" class="alert alert-light text-center py-4 text-muted border-0 bg-light-subtle rounded-3 mb-4">
-              No replies yet. Be the first to join the conversation!
+      <% unless @post["status"] == "contentious" %>
+        <div class="mt-4" id="replies-section">
+          <h5 class="mb-3">Replies (<%= @replies.count %>)</h5>
+          
+          <!-- List Replies -->
+          <div id="replies_list" class="mb-4">
+            <% if @replies.any? %>
+              <%= render partial: "replies/reply", collection: @replies, as: :reply, locals: { view_contentious: @view_contentious } %>
+            <% else %>
+              <div id="no_replies_message" class="alert alert-light text-center py-4 text-muted border-0 bg-light-subtle rounded-3 mb-4">
+                No replies yet. Be the first to join the conversation!
+              </div>
+            <% end %>
+          </div>
+
+          <!-- Bottom "Reply" Button for Main Topic -->
+          <% unless @post["kind"] == "merge_proposal" || @post["merge_proposal"].present? %>
+            <div class="mb-4 d-grid">
+               <button class="btn btn-outline-primary py-3 fw-bold" 
+                       data-action="click->reply-linker#setTarget">
+                 <i class="bi bi-reply-fill me-2"></i> Reply to Topic
+               </button>
             </div>
+
+            <!-- Reply Form -->
+            <%= render "replies/form" %>
           <% end %>
         </div>
-
-        <!-- Bottom "Reply" Button for Main Topic -->
-        <div class="mb-4 d-grid">
-           <button class="btn btn-outline-primary py-3 fw-bold" 
-                   data-action="click->reply-linker#setTarget">
-             <i class="bi bi-reply-fill me-2"></i> Reply to Topic
-           </button>
-        </div>
-
-        <!-- Reply Form -->
-        <%= render "replies/form" %>
-      </div>
+      <% end %>
     </div>
 
     <!-- Sidebar Removed -->

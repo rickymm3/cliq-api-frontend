@@ -10,6 +10,7 @@ module PostSerializable
     user_interaction = "neutral"
     is_signaled = false
     is_moderator = false
+    moderation_vote = nil
     
     if current_user
       interaction = post.post_interactions.find_by(user_id: current_user.id)
@@ -18,12 +19,20 @@ module PostSerializable
       # Check if user is moderator for this post's cliq
       # Using exists? efficiently
       is_moderator = current_user.moderator_subscriptions.exists?(cliq_id: post.cliq_id)
+      
+      # Get user's moderation vote if it exists (0: remove, 1: keep)
+      vote = ModerationVote.find_by(voteable: post, user_id: current_user.id)
+      moderation_vote = vote.vote_type if vote
+
+      is_reported = Report.exists?(reportable: post, reporter: current_user)
     end
 
     cliq_data = {
       id: post.cliq.id,
       name: post.cliq.name,
-      parent_cliq_id: post.cliq.parent_cliq_id
+      parent_cliq_id: post.cliq.parent_cliq_id,
+      color: post.cliq.root_ancestor&.color || post.cliq.color,
+      ancestors: post.cliq.ancestors_list.map { |a| { id: a.id, name: a.name, slug: a.slug, color: a.color } }
     }
 
     # Include parent cliq if it exists
@@ -48,6 +57,9 @@ module PostSerializable
       content: content_html,
       content_json: post.content.body&.as_json || [], # Keep for robustness
       post_type: post.post_type,
+      status: post.status,
+      visibility: post.visibility,
+      kind: post.kind,
       visibility: post.visibility,
       heat_score: post.heat_score,
       views_count: post.views_count,
@@ -56,6 +68,8 @@ module PostSerializable
       is_moderator: is_moderator,
       user_interaction: user_interaction,
       is_signaled: is_signaled,
+      is_reported: is_reported,
+      moderation_vote: moderation_vote,
       user: {
         id: post.user.id,
         email: post.user.email
@@ -73,6 +87,15 @@ module PostSerializable
         no_votes: post.cliq_merge_proposal.no_votes,
         phase_1_expires_at: post.cliq_merge_proposal.phase_1_expires_at,
         phase_2_expires_at: post.cliq_merge_proposal.phase_2_expires_at
+      } : nil,
+      alliance_proposal: post.cliq_alliance_proposal.present? ? {
+        id: post.cliq_alliance_proposal.id,
+        kind: post.cliq_alliance_proposal.kind,
+        source_cliq: { id: post.cliq_alliance_proposal.source_cliq.id, name: post.cliq_alliance_proposal.source_cliq.name },
+        target_cliq: { id: post.cliq_alliance_proposal.target_cliq.id, name: post.cliq_alliance_proposal.target_cliq.name },
+        status: post.cliq_alliance_proposal.status,
+        yes_votes: post.cliq_alliance_proposal.yes_votes,
+        no_votes: post.cliq_alliance_proposal.no_votes
       } : nil
     }
   end

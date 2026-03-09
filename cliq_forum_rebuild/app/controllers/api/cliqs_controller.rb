@@ -36,9 +36,12 @@ class Api::CliqsController < Api::BaseController
         effective_cliq_id: cliq.effective_cliq.id,
         created_at: cliq.created_at,
         updated_at: cliq.updated_at,
+        color: cliq.root_ancestor&.color || cliq.color,
         is_subscribed: is_subscribed,
         subscribed_through_parent: is_subscribed_through_parent(cliq),
+        allies: cliq.related_alliances.map { |c| cliq_json(c) },
         parent: cliq.parent_cliq ? cliq_json(cliq.parent_cliq) : nil,
+        ancestors: cliq.ancestors_list.map { |a| { id: a.id, name: a.name, slug: a.slug, color: a.color } },
         top_children: cliq.child_cliqs.top_children(10).map { |c| cliq_json(c) },
         all_children_count: cliq.child_cliqs.count,
         siblings: cliq.parent_cliq ? cliq.parent_cliq.child_cliqs.where.not(id: cliq.id).map { |c| cliq_json(c) } : []
@@ -147,6 +150,8 @@ class Api::CliqsController < Api::BaseController
 
   def subscribe
     authenticate_api_user!
+    return if performed?
+
     cliq = Cliq.find(params[:id])
     
     # Find or create subscription to avoid duplicates
@@ -163,6 +168,8 @@ class Api::CliqsController < Api::BaseController
 
   def unsubscribe
     authenticate_api_user!
+    return if performed?
+
     cliq = Cliq.find(params[:id])
     subscription = current_user.subscriptions.find_by(cliq: cliq)
     
@@ -176,6 +183,27 @@ class Api::CliqsController < Api::BaseController
       }
     else
       render json: { status: { code: 404, message: "Subscription not found" } }, status: :not_found
+    end
+  end
+
+
+  def destroy_alliance
+    cliq = Cliq.find(params[:cliq_id])
+    ally_id = params[:ally_id]
+    
+    # Permission check: Admin or Moderator of either cliq
+    unless current_user.admin? || cliq.moderators.exists?(id: current_user.id) || Cliq.find(ally_id).moderators.exists?(id: current_user.id)
+      return render json: { error: "Not authorized" }, status: :forbidden
+    end
+
+    alliance = CliqAlliance.find_by(source_cliq_id: cliq.id, target_cliq_id: ally_id) ||
+               CliqAlliance.find_by(source_cliq_id: ally_id, target_cliq_id: cliq.id)
+               
+    if alliance
+      alliance.destroy
+      render json: { message: "Alliance removed" }, status: :ok
+    else
+      render json: { error: "Alliance not found" }, status: :not_found
     end
   end
 
@@ -219,7 +247,8 @@ class Api::CliqsController < Api::BaseController
       is_alias: cliq.alias?,
       hierarchy: cliq.hierarchy_string,
       created_at: cliq.created_at,
-      updated_at: cliq.updated_at
+      updated_at: cliq.updated_at,
+      is_moderator: current_user && (current_user.admin? || cliq.moderators.exists?(id: current_user.id))
     }
   end
 end

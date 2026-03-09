@@ -1,5 +1,9 @@
-class Api::ReportsController < ApplicationController
+class Api::ReportsController < Api::BaseController
+  before_action :authenticate_api_user!
+
   def index
+    # Only allow moderators/admins to index
+    # We should add authorization here later
     reports = Report.all
     render json: reports
   end
@@ -11,6 +15,7 @@ class Api::ReportsController < ApplicationController
 
   def create
     report = Report.new(report_params)
+    report.reporter_id = @current_user.id
     if report.save
       render json: report, status: :created
     else
@@ -36,6 +41,6 @@ class Api::ReportsController < ApplicationController
   private
 
   def report_params
-    params.require(:report).permit(:reporter_id, :cliq_id, :post_id, :reason, :status)
+    params.require(:report).permit(:cliq_id, :reportable_type, :reportable_id, :reason, :status)
   end
 end

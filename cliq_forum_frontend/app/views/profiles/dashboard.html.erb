@@ -41,6 +41,11 @@
             👥 Following <span class="badge bg-secondary ms-2">0</span>
           </button>
         </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings-content" type="button" role="tab">
+            ⚙️ Settings
+          </button>
+        </li>
       </ul>
 
       <!-- Tab Content -->
@@ -131,6 +136,34 @@
         <div class="tab-pane fade" id="following-content" role="tabpanel">
           <div class="alert alert-info" role="alert">
             <p class="mb-0">Following functionality coming soon!</p>
+          </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="tab-pane fade" id="settings-content" role="tabpanel">
+          <div class="card border-0 shadow-sm mt-3">
+            <div class="card-body">
+              <h5 class="card-title mb-4">Content Preferences</h5>
+              
+              <%= form_with url: user_profile_path(current_user[:id]), method: :patch, local: true do |f| %>
+                <div class="form-check form-switch mb-4">
+                  <%= f.check_box :view_contentious_content, 
+                      class: "form-check-input", 
+                      role: "switch", 
+                      checked: @user_details.present? && @user_details["view_contentious_content"] %>
+                  <label class="form-check-label" for="view_contentious_content">
+                    <strong>View Contentious Content</strong>
+                    <div class="text-muted small">
+                      Opt-in to view and moderate posts that have been flagged by the community.
+                    </div>
+                  </label>
+                </div>
+
+                <div class="d-grid gap-2 d-md-block">
+                  <%= f.submit "Save Preferences", class: "btn btn-primary" %>
+                </div>
+              <% end %>
+            </div>
           </div>
         </div>
       </div>

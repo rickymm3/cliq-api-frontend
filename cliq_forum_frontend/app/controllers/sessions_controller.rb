@@ -24,6 +24,7 @@ class SessionsController < ApplicationController
         session[:jwt_token] = token if token
         session[:user_id] = response["data"]["id"]
         session[:user_email] = response["data"]["email"]
+        session[:user_admin] = response["data"]["admin"]
         redirect_to root_path, notice: "Successfully logged in!"
       else
         # Use a more user-friendly error message

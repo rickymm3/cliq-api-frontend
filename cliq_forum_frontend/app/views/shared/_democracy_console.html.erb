@@ -1,0 +1,73 @@
+<%
+  item = local_assigns[:post] || local_assigns[:reply] || local_assigns[:voteable]
+  type = local_assigns[:type] || (local_assigns[:post] ? 'post' : 'reply')
+  # Safety check
+  return unless item
+  
+  # Determine path
+  vote_path = if type == 'post'
+                moderation_vote_post_path(item['id'])
+              else
+                moderation_vote_reply_path(item['id'])
+              end
+%>
+<div class="card border-danger mb-4">
+  <div class="card-header bg-danger text-white">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> Contentious Content Review
+  </div>
+  <div class="card-body">
+    <h5 class="card-title">Community Moderation Required</h5>
+    <p class="card-text">
+      This content has been flagged by multiple community members. As a viewer who has opted-in to see contentious content, you have the right to vote on its future.
+    </p>
+
+    <div class="d-flex justify-content-center gap-3 mt-4" 
+         <% if type == 'post' %>
+           data-controller="moderation-vote" 
+           data-moderation-vote-post-id-value="<%= item['id'] %>"
+           data-moderation-vote-initial-vote-value="<%= item['moderation_vote'] %>"
+         <% end %>
+         id="democracy_console_<%= type %>_<%= item['id'] %>">
+      
+      <% if type == 'post' %>
+        <!-- Stimulus-controlled buttons for Posts -->
+        <button class="btn btn-outline-danger btn-lg d-flex align-items-center mb-2" 
+                data-action="click->moderation-vote#voteRemove" 
+                data-moderation-vote-target="removeButton">
+          <i class="bi bi-trash me-2"></i> Vote and Remove
+        </button>
+
+        <button class="btn btn-outline-success btn-lg d-flex align-items-center mb-2" 
+                data-action="click->moderation-vote#voteKeep" 
+                data-moderation-vote-target="keepButton">
+          <i class="bi bi-check-circle me-2"></i> Vote to Keep
+        </button>
+      <% else %>
+        <!-- Standard Rails buttons for Replies (fallback until controller updated) -->
+        <%= button_to vote_path, 
+            method: :post, 
+            params: { vote_type: "remove" },
+            class: "btn btn-outline-danger btn-lg d-flex align-items-center mb-2",
+            form_class: "d-inline-block",
+            remote: true,
+            data: { turbo: true } do %>
+          <i class="bi bi-trash me-2"></i> Vote and Remove
+        <% end %>
+
+        <%= button_to vote_path, 
+            method: :post, 
+            params: { vote_type: "keep" },
+            class: "btn btn-outline-success btn-lg d-flex align-items-center mb-2", 
+            form_class: "d-inline-block",
+            remote: true,
+            data: { turbo: true } do %>
+          <i class="bi bi-check-circle me-2"></i> Vote to Keep
+        <% end %>
+      <% end %>
+    </div>
+    
+    <p class="text-muted small text-center mt-2">
+      Interactions are disabled while this content is under review.
+    </p>
+  </div>
+</div>

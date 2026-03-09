@@ -96,9 +96,11 @@ module Api
         id: reply.id,
         content: content_display,
         is_deleted: is_deleted,
+        status: reply.status,
         created_at: reply.created_at,
         updated_at: reply.updated_at,
         parent_reply_id: reply.parent_reply_id,
+        is_reported: current_user ? Report.exists?(reportable: reply, reporter: current_user) : false,
         user: {
           id: reply.user.id,
           email: reply.user.email

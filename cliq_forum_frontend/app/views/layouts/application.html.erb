@@ -69,6 +69,9 @@
       <div data-sidebar-toggle-target="overlay" class="sidebar-overlay" data-action="click->sidebar-toggle#close"></div>
       
       <main class="main-content">
+        <!-- Hotwire Toast Container -->
+        <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;"></div>
+
         <% if notice %>
           <div class="alert alert-success alert-dismissible fade show" role="alert">
             <%= notice %>
@@ -87,5 +90,6 @@
       </main>
     </div>
     
+    <%= render "shared/report_modal" %>
   </body>
 </html>

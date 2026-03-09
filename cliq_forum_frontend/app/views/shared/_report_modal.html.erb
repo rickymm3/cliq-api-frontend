@@ -1,0 +1,51 @@
+
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true" data-controller="report-modal">
+  <div class="modal-dialog">
+
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reportModalLabel">Report Content</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <%= form_with url: reports_path, method: :post, local: false, data: { turbo: true } do |f| %>
+        <div class="modal-body">
+          <p class="text-muted small mb-3">
+            Please select a reason for reporting this content. Reporting helps keep our community safe and focused.
+          </p>
+
+          <%= f.hidden_field :post_id, id: "report_post_id" %>
+          <%= f.hidden_field :reply_id, id: "report_reply_id" %>
+          <%= f.hidden_field :cliq_id, id: "report_cliq_id" %>
+
+          <div class="mb-3">
+            <label class="form-label">Reason</label>
+            <div class="form-check">
+              <%= f.radio_button :reason, "spam", class: "form-check-input", required: true, id: "reason_spam" %>
+              <%= f.label :reason_spam, "Spam or irrelevant", class: "form-check-label" %>
+            </div>
+            <div class="form-check">
+              <%= f.radio_button :reason, "harassment", class: "form-check-input", id: "reason_harassment" %>
+              <%= f.label :reason_harassment, "Harassment or hate speech", class: "form-check-label" %>
+            </div>
+            <div class="form-check">
+              <%= f.radio_button :reason, "misinformation", class: "form-check-input", id: "reason_misinformation" %>
+              <%= f.label :reason_misinformation, "Misinformation", class: "form-check-label" %>
+            </div>
+             <div class="form-check">
+              <%= f.radio_button :reason, "other", class: "form-check-input", id: "reason_other" %>
+              <%= f.label :reason_other, "Other", class: "form-check-label" %>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <%= f.submit "Submit Report", class: "btn btn-danger" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Handled by Stimulus controller: app/javascript/controllers/report_modal_controller.js
+</script>

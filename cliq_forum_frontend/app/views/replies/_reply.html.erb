@@ -3,11 +3,16 @@
    reply_user_id = reply["user"]["id"].to_i
    is_mine = current_user_id == reply_user_id
    is_deleted = reply["is_deleted"] == true
+   is_contentious = reply["status"] == "contentious"
    
    created_at_time = Time.parse(reply['created_at'])
    updated_at_time = reply['updated_at'] ? Time.parse(reply['updated_at']) : created_at_time
    # Add variance buffer (Wait 5 seconds before counting as an edit to handle db timestamps diffs properly)
    is_edited = !is_deleted && (updated_at_time - created_at_time > 5)
+   
+   # Content Visibility
+   view_contentious = local_assigns[:view_contentious] == true
+   should_hide_content = is_contentious && !is_mine && !view_contentious
 
    # Safe ID retrieval
    c_id = local_assigns[:cliq_id] || (@cliq ? @cliq["id"] : params[:cliq_id])
@@ -16,6 +21,8 @@
    card_classes = ["card", "mb-3", "border-0"]
    if is_deleted
      card_classes << "bg-light opacity-75"
+   elsif is_contentious
+     card_classes << "border-start border-3 border-danger shadow-sm"
    else
      card_classes << (is_mine ? "bg-white border-start border-3 border-primary shadow-sm" : "bg-light")
    end
@@ -56,8 +63,20 @@
     <div class="trix-content">
       <% if is_deleted %>
          <p class="text-muted fst-italic mb-0">[This post has been deleted]</p>
+       <% elsif should_hide_content %>
+         <div class="bg-light-subtle p-3 rounded text-center border border-danger border-dashed">
+            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+            <span class="fw-bold text-danger">Contentious Content Hidden</span>
+            <p class="small text-muted mt-2 mb-0">Enable 'View Contentious Content' in your profile settings to view and vote.</p>
+         </div>
        <% else %>
-         <%= sanitize reply['content'] %>
+         <%= auto_embed_content(clean_action_text_content(reply['content'])) %>
+
+         <% if is_contentious && !is_mine %>
+            <div class="mt-3">
+               <%= render "shared/democracy_console", reply: reply, type: 'reply' %>
+            </div>
+         <% end %>
        <% end %>
     </div>
     
@@ -100,18 +119,32 @@
        <!-- More Options (Right Aligned) -->
        <div class="dropdown ms-auto">
          <button class="btn btn-sm text-muted p-0 d-flex align-items-center justify-content-center" 
-                 type="button" 
-                 title="More options"
-                 data-bs-toggle="dropdown"
-                 style="width: 32px; height: 32px; border-radius: 50%;"
-                 onmouseover="this.style.backgroundColor='#e9ecef'"
-                 onmouseout="this.style.backgroundColor='transparent'">
+           type="button" 
+           data-bs-toggle="dropdown" 
+           aria-expanded="false"
+           title="More options"
+           style="width: 32px; height: 32px; border-radius: 50%;"
+           onmouseover="this.style.backgroundColor='#e9ecef'"
+           onmouseout="this.style.backgroundColor='transparent'">
            <i class="bi bi-three-dots"></i>
          </button>
          <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-            <li><%= link_to "#", class: "dropdown-item small" do %>
-              <i class="bi bi-flag me-2"></i> Report
-            <% end %></li>
+            <li>
+                <% if reply["is_reported"] %>
+                  <a class="dropdown-item small d-flex align-items-center disabled text-muted" href="#">
+                    <i class="bi bi-flag-fill me-2"></i> Reported
+                  </a>
+                <% else %>
+                  <a class="dropdown-item small d-flex align-items-center" href="#" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#reportModal"
+                    data-report-target-id="<%= reply["id"] %>"
+                    data-report-target-type="reply"
+                    data-report-cliq-id="<%= c_id %>">
+                    <i class="bi bi-flag me-2"></i> Report
+                  </a>
+                <% end %>
+            </li>
             
             <% if is_mine %>
               <li><hr class="dropdown-divider"></li>

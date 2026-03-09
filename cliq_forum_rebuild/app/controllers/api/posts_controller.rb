@@ -17,19 +17,27 @@ module Api
         if params[:exclude_children] == 'true' || params[:exclude_children] == '1'
           target_cliq_ids = [effective_cliq.id]
         else
-          target_cliq_ids = [effective_cliq.id] + effective_cliq.descendants.pluck(:id)
+          # Include self, descendants, AND ALLIED CLIQS
+          ally_ids = effective_cliq.allies.pluck(:id)
+          target_cliq_ids = [effective_cliq.id] + effective_cliq.descendants.pluck(:id) + ally_ids
+        end
+        
+        # Apply Status Filter
+        valid_statuses = [0] # Active
+        if current_user&.view_contentious_content?
+          valid_statuses << 1 # Contentious
         end
         
         # Base Scope: Posts in the target cliq(s)
         if params[:exclude_children] == 'true' || params[:exclude_children] == '1'
-          # Just the current cliq - show everything
-          base_scope = Post.where(cliq_id: effective_cliq.id)
+          # Just the current cliq - show eligible posts
+          base_scope = Post.where(cliq_id: effective_cliq.id).where(status: valid_statuses)
         else
           # Aggregated view: Current Cliq + Descendants
           children_ids = target_cliq_ids - [effective_cliq.id]
           
           if children_ids.empty?
-             base_scope = Post.where(cliq_id: effective_cliq.id)
+             base_scope = Post.where(cliq_id: effective_cliq.id).where(status: valid_statuses)
           else
             # Logic: Show ALL posts from current cliq, match all from children EXCEPT merge proposals
             posts_table = Post.arel_table
@@ -43,7 +51,7 @@ module Api
             not_proposal = posts_table[:kind].not_eq(1).or(posts_table[:kind].eq(nil)).and(posts_table[:cliq_merge_proposal_id].eq(nil))
             
             # Combine: (In Current) OR (In Children AND Not Proposal)
-            base_scope = Post.where(in_current.or(in_children.and(not_proposal)))
+            base_scope = Post.where(in_current.or(in_children.and(not_proposal))).where(status: valid_statuses)
           end
         end
 
@@ -89,8 +97,13 @@ module Api
             )
           )
         )
+
+        # Contentious Content Filter
+        unless current_user.view_contentious_content?
+          scope = scope.where.not(status: :contentious).or(scope.where(user_id: current_user.id))
+        end
       else
-        scope = scope.where(visibility: :visible)
+        scope = scope.where(visibility: :visible).where.not(status: :contentious)
       end
 
       # Apply sorting
@@ -126,8 +139,17 @@ module Api
     def show
       @post = Post.find(params[:id])
       
-      # Increment views and recalculate heat
-      @post.increment!(:views_count)
+      # Check visibility
+      if @post.status_contentious? && (current_user.nil? || !current_user.view_contentious_content?)
+        render json: { status: "error", message: "This content is hidden due to reports." }, status: :forbidden
+        return
+      end
+      
+      # Log visit (Unique + Raw)
+      PostVisit.log_visit(@post.id, request.remote_ip, request.user_agent, current_user&.id)
+      
+      # Recalculate heat
+      @post.reload # Refresh counts
       @post.calculate_heat
 
       render json: {

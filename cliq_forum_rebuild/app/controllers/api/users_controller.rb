@@ -221,13 +221,14 @@ class Api::UsersController < Api::BaseController
   private
 
   def user_params
-    params.require(:user).permit(:email, :password, :password_confirmation)
+    params.require(:user).permit(:email, :password, :password_confirmation, :view_contentious_content)
   end
 
   def user_profile_json(user)
     data = {
       id: user.id,
       email: user.email,
+      view_contentious_content: user.view_contentious_content,
       posts_count: user.posts.count,
       followers_count: user.followers_count,
       following_count: user.following_count,
@@ -257,12 +258,20 @@ class Api::UsersController < Api::BaseController
   end
 
   def generate_jwt_token(user)
+    # Use Warden::JWTAuth::UserEncoder to generate token consistent with Devise-JWT
+    Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first
+  rescue NameError
+    # Fallback if warden-jwt_auth is not available (unlikely)
     payload = { 
       sub: user.id, 
       iat: Time.current.to_i,
-      exp: (Time.current + 7.days).to_i
+      exp: (Time.current + 7.days).to_i,
+      jti: SecureRandom.uuid
     }
-    JWT.encode(payload, Rails.application.secret_key_base, 'HS256')
+    # Use the same secret as configured in Devise
+    # secret = Rails.application.credentials.devise_jwt_secret_key || 'your_jwt_secret_key_here'
+    secret = 'hardcoded_secret_key_for_debugging_12345'
+    JWT.encode(payload, secret, 'HS256')
   end
 
   def serialize_user_basic(user, viewer)

@@ -29,8 +29,14 @@ class CliqMergeProposal < ApplicationRecord
     
     # Save without validation to avoid loop if validates calls something that triggers this
     save(validate: false)
-    
-    check_threshold
+
+    # Admin God Mode check
+    admin_vote = votes.joins(:user).where(users: { admin: true }).last
+    if admin_vote
+      process_admin_vote(admin_vote.value)
+    else
+      check_threshold
+    end
   end
 
   def vote!(user, value)
@@ -43,6 +49,15 @@ class CliqMergeProposal < ApplicationRecord
 
   private
 
+  def process_admin_vote(value)
+    if value
+      # God Mode: Admin approval bypasses all phases immediately
+      approve!
+    else
+      reject!
+    end
+  end
+
   def check_threshold
     return unless proposal_phase?
 
@@ -54,6 +69,17 @@ class CliqMergeProposal < ApplicationRecord
     elsif no_votes >= threshold
       update!(status: :rejected)
     end
+  end
+
+  def approve!
+    return if approved?
+    transaction do
+      update!(status: :approved)
+    end
+  end
+
+  def reject!
+    update!(status: :rejected)
   end
 
   def threshold

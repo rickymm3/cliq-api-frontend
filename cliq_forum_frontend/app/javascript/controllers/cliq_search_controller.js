@@ -4,7 +4,7 @@ export default class extends Controller {
   static targets = ["input", "idField", "results", "selectionDisplay", "selectionName"]
 
   connect() {
-    this.searchUrl = "/api/cliqs/search?q="
+    this.searchUrl = "/cliqs/search?q="
   }
 
   // TODO: Debounce this function in production

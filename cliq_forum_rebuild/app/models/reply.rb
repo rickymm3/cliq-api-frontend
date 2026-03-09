@@ -3,6 +3,10 @@ class Reply < ApplicationRecord
 	belongs_to :user
 	belongs_to :parent_reply, class_name: "Reply", optional: true
 	has_many :child_replies, class_name: "Reply", foreign_key: :parent_reply_id, dependent: :nullify
+  has_many :reports, as: :reportable, dependent: :destroy
+  
+  enum :status, { active: 0, contentious: 1, hidden: 2, deleted: 3 }, prefix: true
+  
 	has_rich_text :content
 
 	after_create :recalculate_post_heat

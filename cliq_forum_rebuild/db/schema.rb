@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_19_142655) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_21_235658) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -65,6 +65,45 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_142655) do
     t.index ["cliq_id"], name: "index_cliq_alias_proposals_on_cliq_id"
     t.index ["parent_cliq_id"], name: "index_cliq_alias_proposals_on_parent_cliq_id"
     t.index ["proposer_id"], name: "index_cliq_alias_proposals_on_proposer_id"
+  end
+
+  create_table "cliq_alliance_proposal_votes", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "cliq_alliance_proposal_id", null: false
+    t.boolean "value", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cliq_alliance_proposal_id"], name: "idx_on_cliq_alliance_proposal_id_73b4ec1038"
+    t.index ["user_id", "cliq_alliance_proposal_id"], name: "index_votes_on_user_and_alliance_proposal", unique: true
+    t.index ["user_id"], name: "index_cliq_alliance_proposal_votes_on_user_id"
+  end
+
+  create_table "cliq_alliance_proposals", force: :cascade do |t|
+    t.bigint "proposer_id", null: false
+    t.bigint "source_cliq_id", null: false
+    t.bigint "target_cliq_id", null: false
+    t.integer "status", default: 0, null: false
+    t.integer "yes_votes", default: 0, null: false
+    t.integer "no_votes", default: 0, null: false
+    t.integer "threshold", default: 5, null: false
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "kind", default: 0, null: false
+    t.index ["proposer_id"], name: "index_cliq_alliance_proposals_on_proposer_id"
+    t.index ["source_cliq_id", "target_cliq_id", "status"], name: "index_cliq_alliance_proposals_on_cliq_pairing_and_status", unique: true, where: "(status = ANY (ARRAY[0, 1]))"
+    t.index ["source_cliq_id"], name: "index_cliq_alliance_proposals_on_source_cliq_id"
+    t.index ["target_cliq_id"], name: "index_cliq_alliance_proposals_on_target_cliq_id"
+  end
+
+  create_table "cliq_alliances", force: :cascade do |t|
+    t.bigint "source_cliq_id", null: false
+    t.bigint "target_cliq_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["source_cliq_id", "target_cliq_id"], name: "index_cliq_alliances_on_source_cliq_id_and_target_cliq_id", unique: true
+    t.index ["source_cliq_id"], name: "index_cliq_alliances_on_source_cliq_id"
+    t.index ["target_cliq_id"], name: "index_cliq_alliances_on_target_cliq_id"
   end
 
   create_table "cliq_daily_stats", force: :cascade do |t|
@@ -127,6 +166,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_142655) do
     t.integer "posts_count", default: 0
     t.bigint "canonical_id"
     t.string "lens"
+    t.string "color"
+    t.string "theme_color"
     t.index ["canonical_id"], name: "index_cliqs_on_canonical_id"
   end
 
@@ -167,13 +208,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_142655) do
 
   create_table "moderation_votes", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.bigint "post_id", null: false
     t.integer "vote_type", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["post_id"], name: "index_moderation_votes_on_post_id"
-    t.index ["user_id", "post_id"], name: "index_moderation_votes_on_user_id_and_post_id", unique: true
+    t.string "voteable_type"
+    t.bigint "voteable_id"
     t.index ["user_id"], name: "index_moderation_votes_on_user_id"
+    t.index ["voteable_type", "voteable_id"], name: "index_moderation_votes_on_voteable"
   end
 
   create_table "moderator_roles", force: :cascade do |t|
@@ -202,6 +243,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_142655) do
     t.datetime "read_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "post_daily_stats", force: :cascade do |t|
+    t.bigint "post_id", null: false
+    t.date "date", null: false
+    t.integer "unique_visits_count", default: 0, null: false
+    t.integer "raw_hits_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["post_id", "date"], name: "index_post_daily_stats_on_post_id_and_date", unique: true
+    t.index ["post_id"], name: "index_post_daily_stats_on_post_id"
   end
 
   create_table "post_interactions", force: :cascade do |t|
@@ -236,6 +288,28 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_142655) do
     t.index ["user_id"], name: "index_post_signals_on_user_id"
   end
 
+  create_table "post_views", force: :cascade do |t|
+    t.bigint "post_id", null: false
+    t.string "visitor_hash", null: false
+    t.date "viewed_on", default: -> { "CURRENT_DATE" }, null: false
+    t.integer "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["post_id", "visitor_hash", "viewed_on"], name: "index_unique_post_view", unique: true
+    t.index ["post_id"], name: "index_post_views_on_post_id"
+  end
+
+  create_table "post_visits", force: :cascade do |t|
+    t.bigint "post_id", null: false
+    t.string "visitor_hash", null: false
+    t.date "visited_on", default: -> { "CURRENT_DATE" }, null: false
+    t.integer "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["post_id", "visitor_hash", "visited_on"], name: "index_unique_post_visit", unique: true
+    t.index ["post_id"], name: "index_post_visits_on_post_id"
+  end
+
   create_table "posts", force: :cascade do |t|
     t.string "title"
     t.text "content"
@@ -253,6 +327,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_142655) do
     t.integer "reports_count", default: 0
     t.bigint "cliq_merge_proposal_id"
     t.integer "kind", default: 0
+    t.integer "status", default: 0
+    t.datetime "hidden_at"
+    t.bigint "cliq_alliance_proposal_id"
+    t.index ["cliq_alliance_proposal_id"], name: "index_posts_on_cliq_alliance_proposal_id"
     t.index ["cliq_merge_proposal_id"], name: "index_posts_on_cliq_merge_proposal_id"
     t.index ["heat_score"], name: "index_posts_on_heat_score"
     t.index ["slug"], name: "index_posts_on_slug", unique: true
@@ -266,16 +344,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_142655) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.integer "status", default: 0
+    t.datetime "hidden_at"
+    t.float "heat_score", default: 0.0
+    t.integer "reports_count", default: 0
   end
 
   create_table "reports", force: :cascade do |t|
     t.integer "reporter_id"
     t.integer "cliq_id"
-    t.integer "post_id"
     t.string "reason"
     t.integer "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "reportable_type"
+    t.bigint "reportable_id"
+    t.index ["reportable_type", "reportable_id"], name: "index_reports_on_reportable"
   end
 
   create_table "subscriptions", force: :cascade do |t|
@@ -296,6 +380,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_142655) do
     t.datetime "remember_created_at"
     t.integer "followers_count", default: 0, null: false
     t.integer "following_count", default: 0, null: false
+    t.boolean "view_contentious_content", default: false
+    t.boolean "admin", default: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
@@ -305,6 +391,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_142655) do
   add_foreign_key "cliq_alias_proposals", "cliqs"
   add_foreign_key "cliq_alias_proposals", "cliqs", column: "parent_cliq_id"
   add_foreign_key "cliq_alias_proposals", "users", column: "proposer_id"
+  add_foreign_key "cliq_alliance_proposal_votes", "cliq_alliance_proposals"
+  add_foreign_key "cliq_alliance_proposal_votes", "users"
+  add_foreign_key "cliq_alliance_proposals", "cliqs", column: "source_cliq_id"
+  add_foreign_key "cliq_alliance_proposals", "cliqs", column: "target_cliq_id"
+  add_foreign_key "cliq_alliance_proposals", "users", column: "proposer_id"
+  add_foreign_key "cliq_alliances", "cliqs", column: "source_cliq_id"
+  add_foreign_key "cliq_alliances", "cliqs", column: "target_cliq_id"
   add_foreign_key "cliq_daily_stats", "cliqs"
   add_foreign_key "cliq_merge_proposal_votes", "cliq_merge_proposals"
   add_foreign_key "cliq_merge_proposal_votes", "users"
@@ -313,15 +406,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_142655) do
   add_foreign_key "cliq_merge_proposals", "users", column: "proposer_id"
   add_foreign_key "cliq_visits", "cliqs"
   add_foreign_key "cliqs", "cliqs", column: "canonical_id"
-  add_foreign_key "moderation_votes", "posts"
   add_foreign_key "moderation_votes", "users"
   add_foreign_key "moderator_subscriptions", "cliqs"
   add_foreign_key "moderator_subscriptions", "users"
+  add_foreign_key "post_daily_stats", "posts"
   add_foreign_key "post_interactions", "posts"
   add_foreign_key "post_interactions", "users"
   add_foreign_key "post_links", "cliqs"
   add_foreign_key "post_links", "posts"
   add_foreign_key "post_signals", "posts"
   add_foreign_key "post_signals", "users"
+  add_foreign_key "post_views", "posts"
+  add_foreign_key "post_visits", "posts"
+  add_foreign_key "posts", "cliq_alliance_proposals"
   add_foreign_key "posts", "cliq_merge_proposals"
 end

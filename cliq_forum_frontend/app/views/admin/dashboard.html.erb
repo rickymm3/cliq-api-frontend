@@ -1,0 +1,110 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Admin Dashboard</h1>
+    <span class="badge bg-danger rounded-pill px-3 py-2">God Mode Enabled</span>
+  </div>
+
+  <div class="row mb-5">
+    <div class="col-md-4">
+      <div class="card bg-light">
+        <div class="card-body text-center">
+          <h3><%= @stats["users_count"] %></h3>
+          <p class="text-muted mb-0">Users</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-light">
+        <div class="card-body text-center">
+          <h3><%= @stats["cliqs_count"] %></h3>
+          <p class="text-muted mb-0">Active Cliqs</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-light">
+        <div class="card-body text-center">
+          <h3><%= @stats["posts_count"] %></h3>
+          <p class="text-muted mb-0">Total Posts</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">Pending Merge Proposals</h5>
+        </div>
+        <div class="card-body p-0">
+          <% if @merge_proposals.any? %>
+            <div class="list-group list-group-flush">
+              <% @merge_proposals.each do |proposal| %>
+                <% source_cliq = proposal["source_cliq"] %>
+                <% target_cliq = proposal["target_cliq"] %>
+                <div class="list-group-item">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="mb-1">
+                        Merge <strong><%= source_cliq["name"] %></strong> into <strong><%= target_cliq["name"] %></strong>
+                      </h6>
+                      <small class="text-muted">
+                        Status: <span class="badge bg-secondary"><%= proposal["status"] %></span> 
+                        • <%= time_ago_in_words(proposal["created_at"]) %> ago
+                      </small>
+                    </div>
+                    <% if proposal["post"] %>
+                      <%= link_to "Review Post", cliq_post_path(proposal["source_cliq"]["id"], proposal["post"]["id"]), class: "btn btn-sm btn-outline-primary" %>
+                    <% else %>
+                      <span class="badge bg-warning text-dark">No Post</span>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="p-4 text-center text-muted">No pending merge proposals.</div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">Pending Alliance Proposals</h5>
+        </div>
+        <div class="card-body p-0">
+          <% if @alliance_proposals.any? %>
+            <div class="list-group list-group-flush">
+              <% @alliance_proposals.each do |proposal| %>
+                <% source_cliq = proposal["source_cliq"] %>
+                <% target_cliq = proposal["target_cliq"] %>
+                <div class="list-group-item">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="mb-1">
+                        Alliance: <strong><%= source_cliq["name"] %></strong> + <strong><%= target_cliq["name"] %></strong>
+                      </h6>
+                      <small class="text-muted">
+                        Votes: <%= proposal["yes_votes"] %> Yes / <%= proposal["no_votes"] %> No
+                      </small>
+                    </div>
+                    <% if proposal["post"] %>
+                      <%= link_to "Review Post", cliq_post_path(proposal["source_cliq"]["id"], proposal["post"]["id"]), class: "btn btn-sm btn-outline-primary" %>
+                    <% else %>
+                      <span class="badge bg-warning text-dark">No Post</span>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="p-4 text-center text-muted">No pending alliance proposals.</div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

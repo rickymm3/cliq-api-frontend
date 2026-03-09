@@ -2,21 +2,17 @@ module ApiAuthenticatable
   extend ActiveSupport::Concern
 
   def authenticate_api_user!
-    Rails.logger.info("=== AUTH DEBUG ===")
-    Rails.logger.info("All headers: #{request.headers.inspect}")
-    Rails.logger.info("Authorization: #{request.headers['Authorization'].inspect}")
-    Rails.logger.info("HTTP_AUTHORIZATION: #{request.headers['HTTP_AUTHORIZATION'].inspect}")
     
     header = request.headers['Authorization'] || request.headers['HTTP_AUTHORIZATION']
-    Rails.logger.info("Selected header: #{header.inspect}")
     return render_unauthorized unless header
 
     begin
       token = header.split(' ').last
-      decoded = JWT.decode(token, Rails.application.secret_key_base, true, { algorithm: 'HS256' })
+      # Use same secret as Devise JWT config
+      secret_key = Rails.application.credentials.devise_jwt_secret_key || Rails.application.secret_key_base
+      decoded = JWT.decode(token, secret_key, true, { algorithm: 'HS256' })
       @current_user_id = decoded[0]['sub']
       @current_user = User.find(@current_user_id)
-      Rails.logger.info("Auth successful: User #{@current_user_id}")
     rescue JWT::DecodeError, JWT::ExpiredSignature => e
       Rails.logger.info("JWT decode error: #{e.message}")
       render_unauthorized
@@ -32,7 +28,9 @@ module ApiAuthenticatable
 
     begin
       token = header.split(' ').last
-      decoded = JWT.decode(token, Rails.application.secret_key_base, true, { algorithm: 'HS256' })
+      # Use same secret as Devise JWT config
+      secret_key = Rails.application.credentials.devise_jwt_secret_key || Rails.application.secret_key_base
+      decoded = JWT.decode(token, secret_key, true, { algorithm: 'HS256' })
       @current_user_id = decoded[0]['sub']
       @current_user = User.find(@current_user_id)
     rescue JWT::DecodeError, JWT::ExpiredSignature

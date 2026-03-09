@@ -18,6 +18,7 @@ Rails.application.routes.draw do
   get "login", to: "sessions#new"
   post "login", to: "sessions#create"
   delete "logout", to: "sessions#destroy"
+  get "logout", to: "sessions#destroy"
 
   get "search", to: "search#index"
   get "feed", to: "feed#index"
@@ -25,9 +26,13 @@ Rails.application.routes.draw do
 
   resources :profiles, only: [:show]
   get "users/:id/profile", to: "profiles#show", as: :user_profile
+  patch "users/:id/profile", to: "profiles#update"
   get "users/:id/followers", to: "users#followers", as: :user_followers
   get "users/:id/following", to: "users#following", as: :user_following
   get "my-profile", to: "profiles#dashboard", as: :dashboard
+  
+  # Admin Dashboard
+  get "admin", to: "admin#dashboard"
 
   resources :cliqs, only: [:show] do
     collection do
@@ -41,6 +46,9 @@ Rails.application.routes.draw do
     post :create_child, on: :member, action: :create_child_post
     get :merge_proposal, on: :member, action: :create_merge_proposal
     post :merge_proposal, on: :member, action: :submit_merge_proposal
+    get :alliance_proposal, on: :member, action: :create_alliance_proposal
+    post :alliance_proposal, on: :member, action: :submit_alliance_proposal
+    post 'alliances/:ally_id/disband', on: :member, action: :submit_disband_proposal, as: :alliance_disband_proposal
     post :subscribe, on: :member
     delete :unsubscribe, on: :member
   end
@@ -50,4 +58,24 @@ Rails.application.routes.draw do
       post :vote
     end
   end
+
+  resources :alliance_proposals, only: [] do
+    member do
+      post :vote
+    end
+  end
+
+  resources :posts do
+    member do
+      post 'moderation_vote', to: 'moderation_votes#create', defaults: { type: 'post' }
+    end
+  end
+
+  resources :replies, only: [] do
+    member do
+      post 'moderation_vote', to: 'moderation_votes#create', defaults: { type: 'reply' }
+    end
+  end
+
+  resources :reports, only: [:create]
 end

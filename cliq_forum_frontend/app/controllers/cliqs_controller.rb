@@ -19,6 +19,7 @@ class CliqsController < ApplicationController
     @top_children_cliqs = @cliq["top_children"] || []
     @all_children_count = @cliq["all_children_count"] || 0
     @sibling_cliqs = @cliq["siblings"] || []
+    @allies_cliqs = @cliq["allies"] || []
     
     query_params = {}
     query_params[:exclude_children] = "1" if params[:exclude_children] == "1"
@@ -52,6 +53,8 @@ class CliqsController < ApplicationController
   def create_child
     # GET request - show the form
     cliq_response = api_get("cliqs/#{params[:id]}")
+    return if performed?
+
     @parent_cliq = cliq_response["data"] if cliq_response
     
     if @parent_cliq.nil?
@@ -83,6 +86,7 @@ class CliqsController < ApplicationController
 
     # Create cliq via API
     cliq_response = api_post("cliqs", cliq_params)
+    return if performed?
     
     if cliq_response && cliq_response["data"]
       new_cliq = cliq_response["data"]
@@ -95,6 +99,7 @@ class CliqsController < ApplicationController
       }
       
       post_response = api_post("cliqs/#{new_cliq["id"]}/posts", post_params)
+      return if performed?
       
       if post_response && post_response["data"]
         new_post = post_response["data"]
@@ -130,8 +135,15 @@ class CliqsController < ApplicationController
     # If API response has data, subscription was successful
     @is_subscribed = api_response.present? && api_response["data"].present?
     
-    # Render the partial directly. The turbo_frame_tag will handle the swap.
-    render partial: "cliqs/subscribe_button", locals: { cliq_id: cliq_id, is_subscribed: @is_subscribed }
+    respond_to do |format|
+      format.html do
+        if turbo_frame_request?
+          render partial: "cliqs/subscribe_button", locals: { cliq_id: cliq_id, is_subscribed: @is_subscribed }
+        else
+          redirect_to cliq_path(cliq_id)
+        end
+      end
+    end
   end
 
   def unsubscribe
@@ -148,8 +160,15 @@ class CliqsController < ApplicationController
     # If API response has data, unsubscription was successful
     @is_subscribed = !(api_response.present? && api_response["data"].present?)
     
-    # Render the partial directly. The turbo_frame_tag will handle the swap.
-    render partial: "cliqs/subscribe_button", locals: { cliq_id: cliq_id, is_subscribed: @is_subscribed }
+    respond_to do |format|
+      format.html do
+        if turbo_frame_request?
+          render partial: "cliqs/subscribe_button", locals: { cliq_id: cliq_id, is_subscribed: @is_subscribed }
+        else
+          redirect_to cliq_path(cliq_id)
+        end
+      end
+    end
   end
 
   def search
@@ -171,6 +190,8 @@ class CliqsController < ApplicationController
   def create_merge_proposal
     # GET request - show the form to suggest a merge
     cliq_response = api_get("cliqs/#{params[:id]}")
+    return if performed?
+
     @cliq = cliq_response["data"] if cliq_response
     
     if @cliq.nil?
@@ -194,6 +215,7 @@ class CliqsController < ApplicationController
     }
     
     response = api_post("cliqs/#{cliq_id}/merge_proposals", { proposal: proposal_params })
+    return if performed?
     
     if response && response["data"]
       redirect_to cliq_path(cliq_id), notice: "Merge proposal submitted for community voting!"
@@ -201,6 +223,63 @@ class CliqsController < ApplicationController
       @errors = response&.dig("errors") || ["Failed to submit proposal"]
       @cliq = api_get("cliqs/#{cliq_id}")&.dig("data")
       render :create_merge_proposal, status: :unprocessable_entity
+    end
+  end
+
+  def create_alliance_proposal
+    # GET request - show the form to suggest an alliance
+    cliq_response = api_get("cliqs/#{params[:id]}")
+    return if performed?
+
+    @cliq = cliq_response["data"] if cliq_response
+    
+    if @cliq.nil?
+      redirect_to root_path, alert: "Category not found"
+      return
+    end
+
+    if !logged_in?
+      redirect_to login_path, alert: "You must be logged in to propose an alliance"
+      return
+    end
+  end
+
+  def submit_alliance_proposal
+    # POST request - submit the proposal
+    cliq_id = params[:id]
+    
+    # We are proposing FOR @cliq (source) to ally WITH target_cliq (target)
+    proposal_params = {
+      target_cliq_id: params[:proposal][:target_cliq_id],
+      description: params[:proposal][:description]
+    }
+    
+    # Start Alliance Proposal for this Cliq
+    response = api_post("cliqs/#{cliq_id}/alliance_proposals", proposal_params)
+    return if performed?
+    
+    if response && (response["status"] == "created" || response["id"])
+      redirect_to cliq_path(cliq_id), notice: "Alliance proposal submitted for community voting!"
+    else
+      @errors = response&.dig("errors") || ["Failed to submit proposal"]
+      @cliq = api_get("cliqs/#{cliq_id}")&.dig("data")
+      render :create_alliance_proposal, status: :unprocessable_entity
+    end
+  end
+
+  def submit_disband_proposal
+    response = api_post("cliqs/#{params[:id]}/alliance_proposals", {
+      proposal: {
+        target_cliq_id: params[:ally_id],
+        kind: "disband_alliance",
+        description: "Vote to dissolve alliance"
+      }
+    })
+    
+    if response && (response["status"] == "created" || response["id"])
+      redirect_to cliq_path(params[:id]), notice: "Proposal to disband alliance submitted for community vote."
+    else
+      redirect_to cliq_path(params[:id]), alert: (response&.dig("errors") || []).first || "Failed to submit disband proposal."
     end
   end
 end

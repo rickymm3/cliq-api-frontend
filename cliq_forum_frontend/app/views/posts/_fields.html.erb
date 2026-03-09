@@ -31,7 +31,7 @@
     <div class="col-md-6">
       <%= form.label :post_type, "Post Type", class: "form-label fw-bold" %>
       <%= form.select :post_type, 
-          [["💬 Discussion", 0], ["📰 Article", 1]], 
+          [["💬 Discussion", 0], ["❓ Question", 1], ["📰 Article", 2]], 
           { selected: @post&.post_type || 0 },
           class: "form-select" %>
       <small class="text-muted d-block mt-2">Choose a post type</small>

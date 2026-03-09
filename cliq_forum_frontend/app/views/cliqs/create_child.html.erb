@@ -4,9 +4,37 @@
       <div class="card border-0 shadow-sm">
         <div class="card-body">
           <h1 class="mb-4">Create New Sub-Cliq</h1>
-          <p class="text-muted mb-4">
-            Under: <strong><%= @parent_cliq["name"] %></strong>
-          </p>
+          <div class="d-flex align-items-center mb-4">
+            <span class="text-muted me-2">Under:</span>
+            
+            <div class="d-flex align-items-center">
+              <% 
+                  # Ancestor filtering logic
+                  ancestors = @parent_cliq["ancestors"] || []
+                  main_cliq_color = nil
+
+                  if ancestors.any? && ancestors.first["color"].present?
+                     main_cliq_color = ancestors.first["color"]
+                     # Skip the first ancestor (Main Cliq)
+                     ancestors = ancestors.drop(1)
+                  elsif @parent_cliq["color"].present?
+                     # Fallback if parent itself has color directly (e.g. is a main cliq)
+                     main_cliq_color = @parent_cliq["color"]
+                  end
+              %>
+
+              <% if main_cliq_color.present? %>
+                  <div class="rounded-circle me-2" style="width: 8px; height: 8px; background-color: <%= main_cliq_color %>;" title="Theme Color"></div>
+              <% end %>
+
+              <% ancestors.each do |ancestor| %>
+                  <%= link_to ancestor["name"], cliq_path(ancestor["id"]), class: "fw-bold text-secondary text-decoration-none hover-dark", target: "_blank" %>
+                  <span class="mx-1 text-muted">/</span>
+              <% end %>
+
+              <%= link_to @parent_cliq["name"], cliq_path(@parent_cliq["id"]), class: "fw-bold text-dark text-decoration-none hover-primary", target: "_blank" %>
+            </div>
+          </div>
 
           <% if @errors.present? %>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">

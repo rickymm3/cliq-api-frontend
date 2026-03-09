@@ -1,40 +1,33 @@
 module Api
   class ModerationVotesController < BaseController
     before_action :authenticate_api_user!
-    
+
     def create
-      post = Post.find(params[:post_id])
-      
-      # Verify user is moderator
-      unless current_user.moderated_cliqs.exists?(post.cliq_id)
-        return render json: { status: "error", errors: ["Not authorized"] }, status: :forbidden
+      # Determine voteable
+      voteable = if params[:post_id]
+                   Post.find(params[:post_id])
+                 elsif params[:reply_id]
+                   Reply.find(params[:reply_id])
+                 end
+
+      unless voteable
+        render json: { error: "Content not found" }, status: :not_found
+        return
       end
+
+      vote = ModerationVote.find_or_initialize_by(
+        user: @current_user,
+        voteable: voteable
+      )
       
-      vote = current_user.moderation_votes.find_or_initialize_by(post: post)
-      vote.vote_type = params[:vote_type] # "keep" (0) or "delete" (1)
-      
+      # Handle both integer (0/1) and key (remove/keep) inputs
+      vote.vote_type = params[:vote_type].to_i if params[:vote_type].to_s.match?(/^\d+$/)
+      vote.vote_type = params[:vote_type] unless params[:vote_type].to_s.match?(/^\d+$/)
+
       if vote.save
-        check_consensus(post)
-        render json: { status: "success", data: vote }
+        render json: { status: "success", message: "Vote recorded" }, status: :created
       else
-        render json: { status: "error", errors: vote.errors.full_messages }, status: :unprocessable_entity
-      end
-    end
-    
-    private
-    
-    def check_consensus(post)
-      # Simple consensus logic: 3 votes needed to decide
-      votes = post.moderation_votes
-      delete_votes = votes.where(vote_type: :delete).count
-      keep_votes = votes.where(vote_type: :keep).count
-      
-      if delete_votes >= 3
-        post.removed!
-      elsif keep_votes >= 3
-        post.visible!
-        # Reset reports if kept? Optional.
-        post.update(reports_count: 0) 
+        render json: { error: vote.errors.full_messages }, status: :unprocessable_entity
       end
     end
   end
